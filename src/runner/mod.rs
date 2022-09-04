@@ -1,59 +1,70 @@
 mod lib;
 
-use crate::parser::lib::RequestNode;
+use crate::parser::{GlueStack, RequestNode};
 use lib::{get, get_response_value};
 use std::collections::HashMap;
 
-pub fn run(requests: &mut Vec<RequestNode>) -> () {
+pub async fn run_stack(stack: &mut GlueStack) -> Result<(), String> {
 	let mut dependencies_resolutions: HashMap<u32, String> = HashMap::new();
 
-	for request in requests {
-		let mut parts = request.predicate.split(' ');
-		let method = parts.nth(0).unwrap().to_string();
-		let mut url = parts.nth(0).unwrap().to_string();
+	for layer in &mut stack.layers {
+		let mut tasks = vec![];
 
-		if request.dependencies.len() > 0 {
-			for dependency in &request.dependencies {
-				let dependency_result = dependencies_resolutions.get(&dependency.id).unwrap();
-				// println!("\t{}\n", dependency_result);
-				url = url.replacen("{}", &dependency_result, 1);
+		for (i, request) in layer.into_iter().enumerate() {
+			let task_dependencies = dependencies_resolutions.clone();
+			let mut node = request.clone();
+
+			tasks.push(tokio::spawn(async move {
+				if node.dependencies.len() > 0 {
+					for dependency in &node.dependencies {
+						let dependency_result = task_dependencies.get(&dependency.id).unwrap();
+						node.url = node.url.replacen("{}", dependency_result, 1);
+					}
+				}
+
+				node.print_info();
+
+				node.result = match run_request(&node).await {
+					Err(x) => return Err(x),
+					Ok(x) => x,
+				};
+
+				Ok((i, node))
+			}));
+		}
+
+		for task in tasks {
+			match task.await {
+				Err(x) => return Err(x.to_string()),
+				Ok(result) => {
+					match result {
+						Err(x) => return Err(x),
+						Ok((i, node)) => {
+							if node.depth == 0 {
+								stack.result = Some(String::from(&node.result));
+							}
+							dependencies_resolutions.insert(node.id, String::from(&node.result));
+							layer[i] = node;
+						}
+					};
+				}
 			}
 		}
+	}
 
-		let url_parts: Vec<&str> = url.split('^').collect();
+	Ok(())
+}
 
-		let response_usable_value = match url_parts.len() > 1 {
-			true => url_parts[1].to_string(),
-			false => "".to_string(),
-		};
+pub async fn run_request(request: &RequestNode) -> Result<String, String> {
+	let result = match get(&request.url).await {
+		Err(x) => return Err(x.to_string()),
+		Ok(x) => x,
+	};
 
-		println!(
-			"> [{}] {}",
-			method.to_uppercase(),
-			&url_parts[0].to_string()
-		);
+	let is_root = request.depth == 0;
 
-		let result = get(&url_parts[0].to_string());
-
-		if !result.is_ok() {
-			println!("{}", result.unwrap_err());
-			return;
-		}
-
-		let is_root = request.depth == 0;
-		let response_value = get_response_value(
-			&response_usable_value,
-			&result.unwrap().text().unwrap(),
-			!is_root,
-			is_root,
-		);
-
-		if request.depth == 0 {
-			request.result = response_value;
-			println!("{}", request.result);
-		} else {
-			let dep_return_value = response_value;
-			dependencies_resolutions.insert(request.id, dep_return_value);
-		}
+	match get_response_value(&request.result_selector, &result, !is_root, is_root) {
+		Err(x) => Err(x),
+		Ok(x) => Ok(x),
 	}
 }

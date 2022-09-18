@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/mikesposito/glue/blob/main/LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/mikesposito/glue/blob/main/CONTRIBUTING.md)
 
-Magnificent  API client made for Humans
+Make requests, select JSON responses, nest them in other requests: A magnificent syntax for blazingly fast cli HTTP calls, **made for humans**.
 
 ## Table of Contents
 
@@ -27,8 +27,8 @@ Magnificent  API client made for Humans
 - [x] Nested requests
 - [x] Optimized parallel HTTP executor
 - [x] JSON Response Value selector
+- [ ] Execute requests from files
 - [ ] Save and reuse requests
-- [ ] Execute requests from file
 
 ## Install
 

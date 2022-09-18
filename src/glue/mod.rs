@@ -2,7 +2,7 @@ mod constants;
 mod runner;
 
 use rand::prelude::random;
-use runner::{delete, get, get_response_value, patch, post, put};
+use runner::{http_request, get_response_value};
 use std::collections::HashMap;
 
 const OPEN_DELIMITER: char = '{';
@@ -75,21 +75,7 @@ impl GlueNode {
 
 		self.print_info();
 
-		let response = match self.method.as_str() {
-			constants::GET => get(&self.url).await,
-
-			constants::POST => post(&self.url, &self.body).await,
-
-			constants::PUT => put(&self.url, &self.body).await,
-
-			constants::PATCH => patch(&self.url, &self.body).await,
-
-			constants::DELETE => delete(&self.url, &self.body).await,
-
-			_ => return Err(constants::ERR_UNKNOWN_METHOD.to_string()),
-		};
-
-		let result = match response {
+		let result = match http_request(&self.method, &self.url, &self.body).await {
 			Err(x) => return Err(x.to_string()),
 			Ok(x) => x,
 		};

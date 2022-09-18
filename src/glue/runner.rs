@@ -1,61 +1,45 @@
+use super::constants;
 use super::{RequestBody, RequestBodyType};
 use jsonpath_rust::JsonPathFinder;
+use reqwest::Client;
+use std::error::Error;
+use std::fmt;
 
-pub async fn get(url: &String) -> Result<String, Box<dyn std::error::Error>> {
-	let resp = reqwest::get(url).await?.text().await?;
-	Ok(resp)
+#[derive(Debug)]
+struct RequestError(String);
+
+impl Error for RequestError {}
+
+impl fmt::Display for RequestError {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "There is an error: {}", self.0)
+	}
 }
 
-pub async fn post(url: &String, body: &Option<RequestBody>) -> Result<String, Box<dyn std::error::Error>> {
-	let client = reqwest::Client::new().post(url);
-	let request = match body {
-		None => client,
-		Some(body_map) => match body_map.body_type {
-			RequestBodyType::JSON => client.json(&body_map.value),
-			RequestBodyType::FORM => client.form(&body_map.value),
+pub async fn http_request(
+	method: &String,
+	url: &String,
+	body: &Option<RequestBody>,
+) -> Result<String, Box<dyn Error>> {
+	let client = match method.as_str() {
+		constants::GET => Client::new().get(url),
+		constants::POST => Client::new().post(url),
+		constants::PUT => Client::new().put(url),
+		constants::PATCH => Client::new().patch(url),
+		constants::DELETE => Client::new().delete(url),
+		_ => {
+			return Err(Box::new(RequestError(
+				constants::ERR_UNKNOWN_METHOD.to_string(),
+			)))
 		}
 	};
 
-	let response = request.send().await?.text().await?;
-	Ok(response)
-}
-
-pub async fn put(url: &String, body: &Option<RequestBody>) -> Result<String, Box<dyn std::error::Error>> {
-	let client = reqwest::Client::new().put(url);
 	let request = match body {
 		None => client,
 		Some(body_map) => match body_map.body_type {
 			RequestBodyType::JSON => client.json(&body_map.value),
 			RequestBodyType::FORM => client.form(&body_map.value),
-		}
-	};
-
-	let response = request.send().await?.text().await?;
-	Ok(response)
-}
-
-pub async fn patch(url: &String, body: &Option<RequestBody>) -> Result<String, Box<dyn std::error::Error>> {
-	let client = reqwest::Client::new().patch(url);
-	let request = match body {
-		None => client,
-		Some(body_map) => match body_map.body_type {
-			RequestBodyType::JSON => client.json(&body_map.value),
-			RequestBodyType::FORM => client.form(&body_map.value),
-		}
-	};
-
-	let response = request.send().await?.text().await?;
-	Ok(response)
-}
-
-pub async fn delete(url: &String, body: &Option<RequestBody>) -> Result<String, Box<dyn std::error::Error>> {
-	let client = reqwest::Client::new().delete(url);
-	let request = match body {
-		None => client,
-		Some(body_map) => match body_map.body_type {
-			RequestBodyType::JSON => client.json(&body_map.value),
-			RequestBodyType::FORM => client.form(&body_map.value),
-		}
+		},
 	};
 
 	let response = request.send().await?.text().await?;

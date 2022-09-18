@@ -64,7 +64,7 @@ glue "get https://dog.ceo/api/breeds/list/all"
 
 ### JSON result selector
 
-If the response is of type JSON, you can add a jsonpath selector to the request with the char `^`. Glue will only return the desired value from the response. This applies also for (Nested requests)[#nested-requests].
+If the response is of type JSON, you can add a jsonpath selector to the request with the char `^`. Glue will only return the desired value from the response. This applies also for [Nested requests](#nested-requests).
 
 ```bash
 glue "get https://dog.ceo/api/breeds/list/all^$.message.terrier"

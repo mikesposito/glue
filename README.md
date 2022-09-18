@@ -15,6 +15,7 @@ Make requests, select JSON responses, nest them in other requests: A magnificent
   - [Simple request](#simple-request)
   - [JSON Result selector](#json-result-selector)
   - [Nested requests](#nested-requests)
+  - [Run file](#run-file)
 - [Contributing](#contributing)
   - [Code of conduct](#code-of-conduct)
   - [Contributing Guide](#contributing-guide)
@@ -27,7 +28,7 @@ Make requests, select JSON responses, nest them in other requests: A magnificent
 - [x] Nested requests
 - [x] Optimized parallel HTTP executor
 - [x] JSON Response Value selector
-- [ ] Execute requests from files
+- [x] Execute requests from files
 - [ ] Save and reuse requests
 
 ## Install
@@ -133,6 +134,14 @@ glue "get api.com/users/{ get api.com/me^$.user.id }/"
 # 1. api.com/me - and will select user.id from the response (eg. 12345)
 
 # 2. api.com/users/12345/
+```
+
+### Run file
+
+You can also create a file with request to run, and pass the file path to glue with flag `-f` to execute it. You can try with one of the sample requests in `examples` folder:
+
+```bash
+glue -f examples/sample-request.glue
 ```
 
 ## Contributing

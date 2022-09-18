@@ -4,6 +4,7 @@ mod runner;
 use rand::prelude::random;
 use runner::{http_request, get_response_value};
 use std::collections::HashMap;
+use std::fs;
 
 const OPEN_DELIMITER: char = '{';
 const CLOSE_DELIMITER: char = '}';
@@ -248,6 +249,18 @@ impl GlueStack {
 	/// node requests in a root node created from string
 	pub fn from_string(command: &String) -> Result<Self, String> {
 		match GlueNode::from_string(command) {
+			Err(x) => Err(x),
+			Ok(x) => Ok(GlueStack::from_root_node(&x)),
+		}
+	}
+
+	pub fn from_file(path: &String) -> Result<Self, String> {
+		let command = match fs::read_to_string(path) {
+			Err(x) => return Err(x.to_string()),
+			Ok(x) => x
+		};
+
+		match GlueNode::from_string(&command) {
 			Err(x) => Err(x),
 			Ok(x) => Ok(GlueStack::from_root_node(&x)),
 		}

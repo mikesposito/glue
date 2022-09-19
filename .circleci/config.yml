@@ -5,8 +5,14 @@ workflows:
   build:
     jobs:
       - test
-      - build-arm
-      - build-linux
+      - build-arm:
+          filter: 
+            branch: 
+              only: main
+      - build-linux:
+          filter: 
+            branch: 
+              only: main
 
 jobs:
 

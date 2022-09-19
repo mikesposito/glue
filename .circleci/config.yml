@@ -1,8 +1,27 @@
 version: 2.1
-orbs:
-  rust: circleci/rust@1.62.1
+
 workflows:
-  production:
+  version: 2
+  build-multi:
     jobs:
-      - rust/lint-test-build:
-          release: true
+      - test
+      - build
+
+jobs:
+  
+  test:
+    docker:
+      - image: cimg/rust:1.63.0
+    steps:
+      - checkout
+      - run: cargo test
+
+  build:
+    docker:
+      - image: cimg/rust:1.63.0
+    steps:
+      - checkout
+      - run: cargo build --release
+      - store_artifacts:
+          path: ~/project/target/release/glue
+          destination: glue-x86_64

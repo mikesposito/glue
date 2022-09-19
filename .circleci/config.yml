@@ -1,8 +1,22 @@
 version: 2.1
+
+workflows:
+  version: 2
+  build-multi:
+    jobs:
+      - test
+      - build
+
 jobs:
   
+  test:
+    docker:
+      - image: cimg/rust:1.63.0
+    steps:
+      - checkout
+      - run: cargo test
+
   build:
-    working_directory: ~/project
     docker:
       - image: cimg/rust:1.63.0
     steps:
@@ -11,17 +25,3 @@ jobs:
       - store_artifacts:
           path: ~/project/target/release/glue
           destination: glue-x86_64
-
-  build-arm:
-    working_directory: ~/project
-    docker:
-      - image: cimg/rust:1.63.0
-    machine:
-      image: ubuntu-2004:202101-01
-    resource_class: arm.medium
-    steps:
-      - checkout
-      - run: cargo build --release
-      - store_artifacts:
-          path: ~/project/target/release/glue
-          destination: glue-arm

@@ -7,7 +7,6 @@ Make requests, select JSON responses, nest them in other requests: A magnificent
 
 ## Table of Contents
 
-- [Features](#features)
 - [Install & Update](#install--update)
 - [Usage](#usage)  
   - [Simple request](#simple-request)
@@ -19,15 +18,6 @@ Make requests, select JSON responses, nest them in other requests: A magnificent
   - [Contributing Guide](#contributing-guide)
   - [Good First Issues](#good-first-issues)
 - [License](#license)
-
-## Features
-
-- [x] Full HTTP Client
-- [x] Nested requests
-- [x] Optimized parallel HTTP executor
-- [x] JSON Response Value selector
-- [x] Execute requests from files
-- [ ] Save and reuse requests
 
 ## Install & Update
 

@@ -3,6 +3,9 @@ jobs:
   build:
     docker:
       - image: cimg/rust:1.63.0
+    working_directory: ~/project
     steps:
       - checkout
-      - run: cargo --version
+      - run: cargo build --release
+      - store_artifacts:
+          path: ~/project/target/release/glue

@@ -2,12 +2,45 @@ version: 2.1
 
 workflows:
   version: 2
-  build-multi:
+  build:
     jobs:
       - test
-      - build
+      - build-arm:
+          filters: 
+            branches: 
+              only: 
+                - main
+      - build-linux:
+          filters: 
+            branches: 
+              only: 
+                - main
 
 jobs:
+
+  build-arm:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
+    steps:
+      - checkout
+      - run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      - run: cargo build --release
+      - store_artifacts:
+          path: ~/project/target/release/glue
+          destination: glue-arm
+  
+  build-linux:
+    machine:
+      image: ubuntu-2004:current
+    resource_class: medium
+    steps:
+      - checkout
+      - run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      - run: cargo build --release
+      - store_artifacts:
+          path: ~/project/target/release/glue
+          destination: glue-x86
   
   test:
     docker:
@@ -15,13 +48,3 @@ jobs:
     steps:
       - checkout
       - run: cargo test
-
-  build:
-    docker:
-      - image: cimg/rust:1.63.0
-    steps:
-      - checkout
-      - run: cargo build --release
-      - store_artifacts:
-          path: ~/project/target/release/glue
-          destination: glue-x86_64

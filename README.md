@@ -7,10 +7,7 @@ Make requests, select JSON responses, nest them in other requests: A magnificent
 
 ## Table of Contents
 
-- [Features](#features)
-- [Install](#install)  
-  - [MacOS](#macos---homebrew)
-  - [Linux, Windows, Other](#linux-windows-macos---build-from-source)
+- [Install & Update](#install--update)
 - [Usage](#usage)  
   - [Simple request](#simple-request)
   - [JSON Result selector](#json-result-selector)
@@ -22,30 +19,19 @@ Make requests, select JSON responses, nest them in other requests: A magnificent
   - [Good First Issues](#good-first-issues)
 - [License](#license)
 
-## Features
+## Install & Update
 
-- [x] Full HTTP Client
-- [x] Nested requests
-- [x] Optimized parallel HTTP executor
-- [x] JSON Response Value selector
-- [x] Execute requests from files
-- [ ] Save and reuse requests
+At the moment, you can install or update glue for your system by building it from source. It has been done quite easy by the script `install.sh`
+in the root of the repo. To install glue:
 
-## Install
-
-### MacOS - Homebrew
-
-After installed [Homebrew](https://brew.sh/) on your system, run the following command in the terminal:
-
+1. Clone the repo
 ```bash
-brew install glue
+git clone https://github.com/mikesposito/glue
 ```
-
-### Linux, Windows, MacOS - Build from source
-
-1. Clone this repository
-2. Install Rust
-3. Build sources with `cargo build --release`
+2. Add execute permission and run install.sh
+```bash
+chmod +x ./install.sh && ./install.sh
+```
 
 ## Usage
 

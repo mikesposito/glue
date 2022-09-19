@@ -6,13 +6,15 @@ workflows:
     jobs:
       - test
       - build-arm:
-          filter: 
-            branch: 
-              only: main
+          filters: 
+            branches: 
+              only: 
+                - main
       - build-linux:
-          filter: 
-            branch: 
-              only: main
+          filters: 
+            branches: 
+              only: 
+                - main
 
 jobs:
 

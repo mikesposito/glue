@@ -21,14 +21,21 @@ Make requests, select JSON responses, nest them in other requests: A magnificent
 
 ## Install & Update
 
-At the moment, you can install or update glue for your system by building it from source. It has been done quite easy by the script `install.sh`
-in the root of the repo. To install glue:
+At the moment, you can install or update glue for your system by building it from source. It has been done quite easy by the script `install.sh`.
+
+All build dependencies (including Rust) will be deleted right after the installation automatically if Rust wasn't already on your system.
 
 1. Clone the repo
 ```bash
 git clone https://github.com/mikesposito/glue
 ```
-2. Add execute permission and run install.sh
+
+2. Go to glue root directory
+```bash
+cd glue
+```
+
+3. Add execute permission and run install.sh
 ```bash
 chmod +x ./install.sh && ./install.sh
 ```

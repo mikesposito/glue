@@ -11,6 +11,7 @@ Make requests, select JSON responses, nest them in other requests: A magnificent
 - [Usage](#usage)  
   - [Simple request](#simple-request)
   - [JSON Result selector](#json-result-selector)
+  - [Body attributes](#body-attributes)
   - [Nested requests](#nested-requests)
   - [Run file](#run-file)
 - [Contributing](#contributing)

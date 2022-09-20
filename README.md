@@ -5,6 +5,8 @@
 
 Make requests, select JSON responses, nest them in other requests: A magnificent syntax for blazingly fast cli HTTP calls, **made for humans**.
 
+![](https://github.com/mikesposito/glue/blob/main/assets/glue_demo.gif)
+
 ## Table of Contents
 
 - [Install & Update](#install--update)

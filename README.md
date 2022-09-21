@@ -112,6 +112,19 @@ glue "post https://example.com/user/add ~username=admin"
 # with a key "username" with value "admin"
 ```
 
+### Headers
+
+You can use the char `*` to set headers to the request:
+
+```bash
+glue "post https://example.com/user/add*authorization=6a75d4d7-84c3"
+# or
+glue "post https://example.com/user/add *authorization=6a75d4d7-84c3"
+
+# glue will send a body of type JSON 
+# with a key "username" with value "admin"
+```
+
 ### Nested requests
 
 One of the most useful features of glue is the request nesting. 

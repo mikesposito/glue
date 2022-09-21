@@ -2,6 +2,7 @@ use super::constants;
 use super::{RequestBody, RequestBodyType};
 use jsonpath_rust::JsonPathFinder;
 use reqwest::Client;
+use reqwest::header::HeaderMap;
 use std::error::Error;
 use std::fmt;
 
@@ -19,6 +20,7 @@ impl fmt::Display for RequestError {
 pub async fn http_request(
 	method: &String,
 	url: &String,
+	headers: &Option<HeaderMap>,
 	body: &Option<RequestBody>,
 ) -> Result<String, Box<dyn Error>> {
 	let client = match method.as_str() {
@@ -34,13 +36,17 @@ pub async fn http_request(
 		}
 	};
 
-	let request = match body {
+	let mut request = match body {
 		None => client,
 		Some(body_map) => match body_map.body_type {
 			RequestBodyType::JSON => client.json(&body_map.value),
 			RequestBodyType::FORM => client.form(&body_map.value),
 		},
 	};
+
+	if headers.is_some() {
+		request = request.headers(headers.clone().unwrap());
+	}
 
 	let response = request.send().await?.text().await?;
 	Ok(response)

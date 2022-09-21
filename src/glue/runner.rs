@@ -44,10 +44,9 @@ pub async fn http_request(
 		},
 	};
 
-	request = match headers {
-		None => request,
-		Some(x) => request.headers(x.to_owned()),
-	};
+	if headers.is_some() {
+		request = request.headers(headers.clone().unwrap());
+	}
 
 	let response = request.send().await?.text().await?;
 	Ok(response)

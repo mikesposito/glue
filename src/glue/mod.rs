@@ -2,6 +2,7 @@ mod constants;
 mod runner;
 
 use rand::prelude::random;
+use reqwest::header::{HeaderName, HeaderValue, HeaderMap};
 use runner::{http_request, get_response_value};
 use std::collections::HashMap;
 use std::fs;
@@ -17,6 +18,7 @@ pub struct GlueNode {
 	pub method: String,
 	pub url: String,
 	pub result_selector: String,
+	pub headers: Option<HeaderMap>,
 	pub body: Option<RequestBody>,
 	pub dependencies: Vec<GlueNode>,
 	pub depth: usize,
@@ -43,6 +45,7 @@ impl GlueNode {
 			predicate: String::from(""),
 			method: String::from(""),
 			url: String::from(""),
+			headers: None,
 			body: None,
 			result_selector: String::from(""),
 			dependencies: Vec::new(),
@@ -76,7 +79,7 @@ impl GlueNode {
 
 		self.print_info();
 
-		let result = match http_request(&self.method, &self.url, &self.body).await {
+		let result = match http_request(&self.method, &self.url, &self.headers, &self.body).await {
 			Err(x) => return Err(x.to_string()),
 			Ok(x) => x,
 		};
@@ -142,6 +145,7 @@ impl GlueNode {
 		self.resolve_method()?;
 		self.resolve_url()?;
 		self.resolve_selector();
+		self.resolve_headers()?;
 		self.resolve_body()?;
 
 		Ok(())
@@ -162,7 +166,7 @@ impl GlueNode {
 			Some(x) => x,
 		};
 
-		self.url = match resource.split(['^', '~']).nth(0) {
+		self.url = match resource.split(['^', '~', '*']).nth(0) {
 			None => return Err(String::from(constants::ERR_UNRESOLVED_URL)),
 			Some(x) => x.to_string(),
 		};
@@ -175,6 +179,45 @@ impl GlueNode {
 			None => "".to_string(),
 			Some(x) => x.to_string(),
 		};
+	}
+
+	fn resolve_headers(self: &mut Self) -> Result<(), String> {
+		let mut request_headers = HeaderMap::new();
+		let mut headers_parts = self.predicate.split('*');
+		headers_parts.next(); // The first is always the url and selector
+
+		for attribute in headers_parts.into_iter() {
+			let sanitized = attribute.split(['\n', '\t', ' ']).nth(0).unwrap();
+			let mut key_value_array = sanitized.trim().split('=');
+
+			let key = match key_value_array.next() {
+				None => return Err(String::from(constants::ERR_UNRESOLVED_ATTR_KEY)),
+				Some(x) => x.trim().to_string(),
+			};
+
+			let value = match key_value_array.next() {
+				None => return Err(String::from(constants::ERR_UNRESOLVED_ATTR_VAL)),
+				Some(x) => x.trim().to_string(),
+			};
+
+			let header_name = match HeaderName::from_lowercase(key.to_lowercase().as_bytes()) {
+				Err(x) => return Err(x.to_string()),
+				Ok(x) => x,
+			};
+
+			let header_value = match HeaderValue::from_str(&value[..]) {
+				Err(x) => return Err(x.to_string()),
+				Ok(x) => x,
+			};
+
+			request_headers.insert(header_name, header_value);
+		}
+
+		if !request_headers.is_empty() {
+			self.headers = Some(request_headers);
+		}
+
+		Ok(())
 	}
 
 	fn resolve_body(self: &mut Self) -> Result<(), String> {

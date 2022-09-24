@@ -160,7 +160,7 @@ impl GlueNode {
 	fn resolve_method(self: &mut Self) -> Result<(), String> {
 		self.method = match self.predicate.trim().split(' ').nth(0) {
 			None => return Err(String::from(constants::ERR_UNRESOLVED_METHOD)),
-			Some(x) => x.to_string(),
+			Some(x) => x.to_string().replace("\n", ""),
 		};
 
 		Ok(())
@@ -174,7 +174,7 @@ impl GlueNode {
 
 		self.url = match resource.split(['^', '~', '*']).nth(0) {
 			None => return Err(String::from(constants::ERR_UNRESOLVED_URL)),
-			Some(x) => x.to_string(),
+			Some(x) => x.to_string().replace("\n", ""),
 		};
 
 		Ok(())

@@ -37,9 +37,8 @@ jobs:
       - image: cimg/rust:1.63.0
     steps:
       - checkout
-      - run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-      - run: ~/.cargo/bin/rustup target install aarch64-apple-darwin
-      - run: ~/.cargo/bin/cargo build --release --target aarch64-apple-darwin
+      - run: rustup target install aarch64-apple-darwin
+      - run: cargo build --release --target aarch64-apple-darwin
       - store_artifacts:
           path: ~/project/target/release/glue
           destination: glue_m1
@@ -49,9 +48,8 @@ jobs:
       - image: cimg/rust:1.63.0
     steps:
       - checkout
-      - run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-      - run: ~/.cargo/bin/rustup target install x86_64-apple-darwin
-      - run: ~/.cargo/bin/cargo build --release --target x86_64-apple-darwin
+      - run: rustup target install x86_64-apple-darwin
+      - run: cargo build --release --target x86_64-apple-darwin
       - store_artifacts:
           path: ~/project/target/release/glue
           destination: glue_darwin
@@ -62,9 +60,8 @@ jobs:
     resource_class: medium
     steps:
       - checkout
-      - run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-      - run: ~/.cargo/bin/rastup target install x86_64-unknown-linux-gnu
-      - run: ~/.cargo/bin/cargo build --release --target x86_64-unknown-linux-gnu
+      - run: rastup target install x86_64-unknown-linux-gnu
+      - run: cargo build --release --target x86_64-unknown-linux-gnu
       - store_artifacts:
           path: ~/project/target/release/glue
           destination: glue-linux

@@ -1,0 +1,7 @@
+get https://6328f40dd2c97d8c525f6d60.mockapi.io/users
+*authorization={
+  post https://6328f40dd2c97d8c525f6d60.mockapi.io/login
+  ~username=admin
+  ~password=admin
+  ^$.access_token
+}

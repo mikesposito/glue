@@ -14,8 +14,10 @@ Make requests, select JSON responses, nest them in other requests: A magnificent
   - [Simple request](#simple-request)
   - [JSON Result selector](#json-result-selector)
   - [Body attributes](#body-attributes)
+  - [Headers](#headers)
   - [Nested requests](#nested-requests)
   - [Run file](#run-file)
+- [Examples](./examples/README.md)
 - [Contributing](#contributing)
   - [Code of conduct](#code-of-conduct)
   - [Contributing Guide](#contributing-guide)
@@ -112,6 +114,9 @@ glue "post https://example.com/user/add ~username=admin"
 # with a key "username" with value "admin"
 ```
 
+#### **Note**
+Body attributes can take their value from another request's response by using [nested requests](#nested-requests) feature.
+
 ### Headers
 
 You can use the char `*` to set headers to the request:
@@ -124,6 +129,9 @@ glue "post https://example.com/user/add *authorization=6a75d4d7-84c3"
 # glue will send a body of type JSON 
 # with a key "username" with value "admin"
 ```
+
+#### **Note**
+Headers can take their value from another request's response by using [nested requests](#nested-requests) feature.
 
 ### Nested requests
 
@@ -143,6 +151,12 @@ glue "get api.com/users/{ get api.com/me^$.user.id }/"
 # 1. api.com/me - and will select user.id from the response (eg. 12345)
 
 # 2. api.com/users/12345/
+```
+
+Request can also be nested inside body or headers parameters:
+
+```bash
+glue "get api.com/me *authorization={get api.com/login^$.access_token}/"
 ```
 
 ### Run file

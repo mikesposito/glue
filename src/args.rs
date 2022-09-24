@@ -1,22 +1,24 @@
-use clap::Parser;
 use clap::CommandFactory;
-
+use clap::Parser;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 pub struct Args {
 	pub request: Option<String>,
 
 	#[clap(short, long, value_parser)]
-	pub file: Option<String>
+	pub file: Option<String>,
+
+	#[clap(short, long)]
+	pub verbose: bool,
 }
 
-pub fn parse_command_args() -> Args {
+pub fn command_args() -> Args {
 	Args::parse()
 }
 
 pub fn print_help() {
 	let mut cmd = Args::command();
 	match cmd.print_help() {
-		_ => ()
+		_ => (),
 	}
 }

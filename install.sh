@@ -30,6 +30,11 @@ mkdir $HOME/.glue
 mkdir $HOME/.glue/bin
 export GLUE_HOME=$HOME/.glue
 
+# Move older version if exists
+if [ -f "$GLUE_HOME/bin/glue" ]; then
+  mv $GLUE_HOME/bin/glue $GLUE_HOME/bin/glue.old
+fi
+
 # Move executable to Glue Home
 cp target/release/glue $GLUE_HOME/bin
 chmod +x $GLUE_HOME/bin/glue
@@ -51,6 +56,10 @@ fi
 # if Rust was not previously installed, uninstall it
 if $NEW_CARGO; then
   rustup self uninstall -y
+fi
+
+if [ -f "$GLUE_HOME/bin/glue.old" ]; then
+  rm $GLUE_HOME/bin/glue.old
 fi
 
 $HOME/.glue/bin/glue --version

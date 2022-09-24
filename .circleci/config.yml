@@ -5,27 +5,30 @@ workflows:
   build:
     jobs:
       - test
-      - build-apple-m1:
-          filters: 
-            tags:
-              only: 
-                - /^v.*/
-            branches:
-              ignore: /.*/
-      - build-apple-x86:
-          filters: 
-            tags:
-              only: 
-                - /^v.*/
-            branches:
-              ignore: /.*/
-      - build-linux:
-          filters: 
-            tags:
-              only: 
-                - /^v.*/
-            branches:
-              ignore: /.*/
+#      - build-apple-m1:
+#          filters: 
+#            tags:
+#              only: 
+#                - /^v.*/
+#            branches:
+#              ignore: /.*/
+#      - build-apple-x86:
+#          filters: 
+#            tags:
+#              only: 
+#                - /^v.*/
+#            branches:
+#              ignore: /.*/
+#      - build-linux:
+#          filters: 
+#            tags:
+#              only: 
+#                - /^v.*/
+#            branches:
+#              ignore: /.*/
+      - build-apple-m1
+      - build-apple-x86
+      - build-linux
 
 jobs:
 

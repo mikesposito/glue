@@ -1,9 +1,11 @@
 mod constants;
 mod runner;
 
+use crate::args::command_args;
+use colored::*;
 use rand::prelude::random;
-use reqwest::header::{HeaderName, HeaderValue, HeaderMap};
-use runner::{http_request, get_response_value};
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use runner::{get_response_value, http_request};
 use std::collections::HashMap;
 use std::fs;
 
@@ -73,11 +75,18 @@ impl GlueNode {
 		if self.dependencies.len() > 0 {
 			for dependency in &self.dependencies {
 				let dependency_result = task_dependencies.get(&dependency.id).unwrap();
-				self.url = self.url.replacen("{}", dependency_result, 1);
+				self.predicate = self.predicate.replacen("{}", dependency_result, 1);
 			}
 		}
 
-		self.print_info();
+		match self.resolve_predicate() {
+			Err(x) => return Err(x),
+			_ => (),
+		};
+
+		if command_args().verbose {
+			self.print_info();
+		}
 
 		let result = match http_request(&self.method, &self.url, &self.headers, &self.body).await {
 			Err(x) => return Err(x.to_string()),
@@ -133,10 +142,7 @@ impl GlueNode {
 			}
 		}
 
-		match self.resolve_predicate() {
-			Err(x) => Err(x),
-			Ok(_) => Ok(close_dep_at),
-		}
+		Ok(close_dep_at)
 	}
 
 	/// Reads the predicate and tries to resolve
@@ -154,7 +160,7 @@ impl GlueNode {
 	fn resolve_method(self: &mut Self) -> Result<(), String> {
 		self.method = match self.predicate.trim().split(' ').nth(0) {
 			None => return Err(String::from(constants::ERR_UNRESOLVED_METHOD)),
-			Some(x) => x.to_string(),
+			Some(x) => x.to_string().replace("\n", ""),
 		};
 
 		Ok(())
@@ -168,7 +174,7 @@ impl GlueNode {
 
 		self.url = match resource.split(['^', '~', '*']).nth(0) {
 			None => return Err(String::from(constants::ERR_UNRESOLVED_URL)),
-			Some(x) => x.to_string(),
+			Some(x) => x.to_string().replace("\n", ""),
 		};
 
 		Ok(())
@@ -250,7 +256,25 @@ impl GlueNode {
 	}
 
 	pub fn print_info(self: &Self) -> () {
-		println!("> [{}] {}", self.method.to_uppercase(), self.url);
+		println!(
+			"> {} {}",
+			self.method.to_uppercase().truecolor(110, 110, 110),
+			self.url.truecolor(110, 110, 110)
+		);
+
+		match &self.body {
+			Some(x) => {
+				for (key, value) in &x.value {
+					println!(
+						"\t{}{}{}",
+						key.truecolor(110, 110, 110),
+						"=".truecolor(110, 110, 110),
+						value.truecolor(110, 110, 110)
+					)
+				}
+			}
+			_ => (),
+		}
 	}
 }
 
@@ -300,7 +324,7 @@ impl GlueStack {
 	pub fn from_file(path: &String) -> Result<Self, String> {
 		let command = match fs::read_to_string(path) {
 			Err(x) => return Err(x.to_string()),
-			Ok(x) => x
+			Ok(x) => x,
 		};
 
 		match GlueNode::from_string(&command) {

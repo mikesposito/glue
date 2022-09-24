@@ -1,4 +1,3 @@
-
 pub const GET: &str = "get";
 pub const POST: &str = "post";
 pub const PUT: &str = "put";

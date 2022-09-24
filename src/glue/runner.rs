@@ -1,8 +1,8 @@
 use super::constants;
 use super::{RequestBody, RequestBodyType};
 use jsonpath_rust::JsonPathFinder;
-use reqwest::Client;
 use reqwest::header::HeaderMap;
+use reqwest::Client;
 use std::error::Error;
 use std::fmt;
 

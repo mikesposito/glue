@@ -1,0 +1,2 @@
+get https://6328f40dd2c97d8c525f6d60.mockapi.io/users
+*authorization=my-secret-token

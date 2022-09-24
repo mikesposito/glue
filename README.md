@@ -126,8 +126,8 @@ glue "post https://example.com/user/add*authorization=6a75d4d7-84c3"
 # or
 glue "post https://example.com/user/add *authorization=6a75d4d7-84c3"
 
-# glue will send a body of type JSON 
-# with a key "username" with value "admin"
+# glue will set Authorization header
+# to value "6a75d4d7-84c3"
 ```
 
 #### **Note**

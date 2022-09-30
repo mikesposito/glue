@@ -6,24 +6,26 @@ pub async fn interactive() -> () {
 	loop {
 		let command = prompt();
 
-		match command {
-      Some(x ) if x == "" => (), 
-			Some(x) => {
-				let mut runner = match Runner::from_string(&x, false) {
-					Err(x) => {
-						print_err(x);
-						return;
-					}
-					Ok(x) => x,
-				};
+		if command.is_none() {
+			break;
+		}
 
-				match runner.execute().await {
-					Err(x) => print_err(x),
-					Ok(_) => println!("{}", runner.result.unwrap()),
-				};
-			}
-			_ => break,
-		};
+		let glue_command = command.unwrap();
+
+		if glue_command != "" {
+			let mut runner = match Runner::from_string(&glue_command, false) {
+				Err(x) => {
+					print_err(x);
+					return;
+				}
+				Ok(x) => x,
+			};
+
+			match runner.execute().await {
+				Err(x) => print_err(x),
+				Ok(_) => println!("{}", runner.result.unwrap()),
+			};
+		}
 	}
 }
 

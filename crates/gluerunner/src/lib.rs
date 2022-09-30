@@ -24,6 +24,7 @@ pub struct Runner {
 	pub layers: Vec<Vec<GlueNode>>,
 	pub depth: usize,
 	pub result: Option<String>,
+	pub heap: HashMap<String, String>,
 	pub log_info: bool,
 }
 
@@ -33,6 +34,7 @@ impl Runner {
 			layers: vec![vec![]],
 			depth: 0,
 			result: None,
+			heap: HashMap::new(),
 			log_info,
 		}
 	}
@@ -98,22 +100,29 @@ impl Runner {
 			}
 
 			for (i, task) in tasks {
-				match task.await {
+				let result = match task.await {
 					Err(x) => return Err(x.to_string()),
-					Ok(result) => {
-						match result {
-							Err(x) => return Err(x),
-							Ok(node) => {
-								if node.depth == 0 {
-									self.result = Some(String::from(&node.result));
-								}
-								dependencies_resolutions
-									.insert(node.id, String::from(&node.result));
-								layer[i] = node;
-							}
-						};
-					}
+					Ok(x) => x,
+				};
+
+				let executed_node = match result {
+					Err(x) => return Err(x),
+					Ok(x) => x,
+				};
+
+				if executed_node.depth == 0 {
+					self.result = Some(String::from(&executed_node.result));
 				}
+
+				if executed_node.save_as.is_some() {
+					let var_key = executed_node.clone().save_as.unwrap();
+					self.heap
+						.insert(var_key, String::from(&executed_node.result));
+				}
+
+				dependencies_resolutions
+					.insert(executed_node.id, String::from(&executed_node.result));
+				layer[i] = executed_node;
 			}
 		}
 
@@ -133,7 +142,43 @@ impl Runner {
 	}
 }
 
-pub async fn http_request(
+async fn execute_node(
+	mut node: GlueNode,
+	task_dependencies: HashMap<u32, String>,
+	log_info: bool,
+) -> Result<GlueNode, String> {
+	if node.dependencies.len() > 0 {
+		for dependency in &node.dependencies {
+			let dependency_result = task_dependencies.get(&dependency.id).unwrap();
+			node.predicate = node.predicate.replacen("{}", dependency_result, 1);
+		}
+	}
+
+	match node.resolve_predicate() {
+		Err(x) => return Err(x),
+		_ => (),
+	};
+
+	if log_info {
+		node.print_info();
+	}
+
+	let result = match http_request(&node.method, &node.url, &node.headers, &node.body).await {
+		Err(x) => return Err(x.to_string()),
+		Ok(x) => x,
+	};
+
+	let is_root = node.depth == 0;
+
+	node.result = match get_response_value(&node.result_selector, &result, !is_root, is_root) {
+		Err(x) => return Err(x),
+		Ok(x) => x,
+	};
+
+	Ok(node)
+}
+
+async fn http_request(
 	method: &String,
 	url: &String,
 	headers: &Option<HeaderMap>,
@@ -168,7 +213,7 @@ pub async fn http_request(
 	Ok(response)
 }
 
-pub fn get_response_value(
+fn get_response_value(
 	path: &String,
 	response: &String,
 	just_first_slice_value: bool,
@@ -210,40 +255,4 @@ pub fn get_response_value(
 		Err(x) => Err(x.to_string()),
 		Ok(x) => Ok(x),
 	}
-}
-
-pub async fn execute_node(
-	mut node: GlueNode,
-	task_dependencies: HashMap<u32, String>,
-	log_info: bool,
-) -> Result<GlueNode, String> {
-	if node.dependencies.len() > 0 {
-		for dependency in &node.dependencies {
-			let dependency_result = task_dependencies.get(&dependency.id).unwrap();
-			node.predicate = node.predicate.replacen("{}", dependency_result, 1);
-		}
-	}
-
-	match node.resolve_predicate() {
-		Err(x) => return Err(x),
-		_ => (),
-	};
-
-	if log_info {
-		node.print_info();
-	}
-
-	let result = match http_request(&node.method, &node.url, &node.headers, &node.body).await {
-		Err(x) => return Err(x.to_string()),
-		Ok(x) => x,
-	};
-
-	let is_root = node.depth == 0;
-
-	node.result = match get_response_value(&node.result_selector, &result, !is_root, is_root) {
-		Err(x) => return Err(x),
-		Ok(x) => x,
-	};
-
-	Ok(node)
 }

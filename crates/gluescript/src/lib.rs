@@ -21,6 +21,7 @@ pub struct GlueNode {
 	pub dependencies: Vec<GlueNode>,
 	pub depth: usize,
 	pub result: String,
+  pub save_as: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -49,6 +50,7 @@ impl GlueNode {
 			dependencies: Vec::new(),
 			depth,
 			result: String::from(""),
+      save_as: None,
 		}
 	}
 
@@ -112,6 +114,7 @@ impl GlueNode {
 		self.resolve_method()?;
 		self.resolve_url()?;
 		self.resolve_selector();
+		self.resolve_save_as();
 		self.resolve_headers()?;
 		self.resolve_body()?;
 
@@ -215,6 +218,14 @@ impl GlueNode {
 
 		Ok(())
 	}
+
+  fn resolve_save_as(self: &mut Self) -> () {
+    let mut vars = self.predicate.split('>');
+    self.save_as = match vars.nth(1) {
+      None => None,
+      Some(x) => Some(x.to_string()),
+    };
+  }
 
 	pub fn print_info(self: &Self) -> () {
 		println!(

@@ -305,7 +305,9 @@ name = "gluescript"
 version = "0.1.0-alpha.4"
 dependencies = [
  "colored",
+ "lazy_static",
  "rand",
+ "regex",
  "reqwest",
 ]
 

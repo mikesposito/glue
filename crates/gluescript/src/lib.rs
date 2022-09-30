@@ -2,8 +2,10 @@ pub mod constants;
 
 use colored::*;
 use rand::prelude::random;
+use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use std::collections::HashMap;
+use lazy_static::lazy_static;
 
 const OPEN_DELIMITER: char = '{';
 const CLOSE_DELIMITER: char = '}';
@@ -136,7 +138,10 @@ impl GlueNode {
 			Some(x) => x,
 		};
 
-		self.url = match resource.split(['^', '~', '*']).nth(0) {
+		self.url = match exclude_quoted_text(resource.to_string())
+			.split(['^', '~', '*'])
+			.nth(0)
+		{
 			None => return Err(String::from(constants::ERR_UNRESOLVED_URL)),
 			Some(x) => x.to_string().replace("\n", ""),
 		};
@@ -145,7 +150,10 @@ impl GlueNode {
 	}
 
 	fn resolve_selector(self: &mut Self) -> () {
-		self.result_selector = match self.predicate.split('^').nth(1) {
+		self.result_selector = match exclude_quoted_text(String::from(&self.predicate))
+			.split('^')
+			.nth(1)
+		{
 			None => "".to_string(),
 			Some(x) => x.to_string(),
 		};
@@ -157,7 +165,7 @@ impl GlueNode {
 		headers_parts.next(); // The first is always the url and selector
 
 		for attribute in headers_parts.into_iter() {
-			let sanitized = attribute.split(['\n', '\t', ' ']).nth(0).unwrap();
+			let sanitized = attribute.split(['\n', '\t', '^', '~']).nth(0).unwrap();
 			let mut key_value_array = sanitized.trim().split('=');
 
 			let key = match key_value_array.next() {
@@ -175,7 +183,7 @@ impl GlueNode {
 				Ok(x) => x,
 			};
 
-			let header_value = match HeaderValue::from_str(&value[..]) {
+			let header_value = match HeaderValue::from_str(&trim_and_remove_quotes(value)[..]) {
 				Err(x) => return Err(x.to_string()),
 				Ok(x) => x,
 			};
@@ -196,7 +204,7 @@ impl GlueNode {
 		body_parts.next(); // The first is always the url and selector
 
 		for attribute in body_parts.into_iter() {
-			let sanitized = attribute.split(['\n', '\t', ' ']).nth(0).unwrap();
+			let sanitized = attribute.split(['\n', '\t', '^', '~']).nth(0).unwrap();
 			let mut key_value_array = sanitized.trim().split('=');
 
 			let key = match key_value_array.next() {
@@ -206,7 +214,7 @@ impl GlueNode {
 
 			let value = match key_value_array.next() {
 				None => return Err(String::from(constants::ERR_UNRESOLVED_ATTR_VAL)),
-				Some(x) => x.trim().to_string(),
+				Some(x) => trim_and_remove_quotes(x.to_string()),
 			};
 
 			request_body.insert(key, value);
@@ -220,8 +228,10 @@ impl GlueNode {
 	}
 
 	fn resolve_save_as(self: &mut Self) -> () {
-		let mut vars = self.predicate.split('>');
-		self.save_as = match vars.nth(1) {
+		self.save_as = match exclude_quoted_text(String::from(&self.predicate))
+			.split('>')
+			.nth(1)
+		{
 			None => None,
 			Some(x) => Some(x.to_string()),
 		};
@@ -254,4 +264,20 @@ impl RequestBody {
 	pub fn new(body_type: RequestBodyType, value: HashMap<String, String>) -> Self {
 		RequestBody { body_type, value }
 	}
+}
+
+fn exclude_quoted_text(input: String) -> String {
+  lazy_static! {
+    static ref RE: Regex = Regex::new(r#""(.*?)""#).unwrap();
+  }
+
+	RE.replace_all(&input, "").to_string()
+}
+
+fn trim_and_remove_quotes(mut input: String) -> String {
+  input = String::from(input.trim());
+  if input.starts_with('"') && input.ends_with('"') {
+    input = String::from(&input[1..input.len()-2])
+  }
+  input
 }

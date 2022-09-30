@@ -1,8 +1,7 @@
 mod args;
-pub mod glue;
 
 use args::{command_args, print_help, Args};
-use glue::GlueStack;
+use gluerunner::Runner;
 
 #[tokio::main]
 async fn main() {
@@ -13,19 +12,19 @@ async fn main() {
 		return;
 	}
 
-	let mut glue_stack = match args.file {
-		None => match GlueStack::from_string(&args.request.unwrap()) {
+	let mut glue_runner = match args.file {
+		None => match Runner::from_string(&args.request.unwrap(), args.verbose) {
 			Err(x) => panic!("Error encountered while creating glue: {}", x),
 			Ok(x) => x,
 		},
-		Some(x) => match GlueStack::from_file(&x) {
+		Some(x) => match Runner::from_file(&x, args.verbose) {
 			Err(x) => panic!("Error encountered while creating glue: {}", x),
 			Ok(x) => x,
 		},
 	};
 
-	match glue_stack.execute().await {
+	match glue_runner.execute().await {
 		Err(x) => panic!("Error encountered while executing requests: {}", x),
-		Ok(_) => println!("{}", glue_stack.result.unwrap()),
+		Ok(_) => println!("{}", glue_runner.result.unwrap()),
 	};
 }

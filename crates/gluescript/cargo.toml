@@ -1,0 +1,10 @@
+[package]
+name = "gluescript"
+version = "0.1.0-alpha.4"
+edition = "2021"
+authors = ["Michele Esposito<michele@esposito.codes>"]
+
+[dependencies]
+colored = "2.0.0"
+rand = "0.8.4"
+reqwest = { version = "0.11", features = ["json"] }

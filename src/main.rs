@@ -1,6 +1,6 @@
 mod args;
 
-use args::{command_args, print_help, Args};
+use args::{command_args, Args};
 use gluerunner::Runner;
 
 #[tokio::main]
@@ -8,7 +8,7 @@ async fn main() {
 	let args: Args = command_args();
 
 	if args.file.is_none() && args.request.is_none() {
-		print_help();
+		glueshell::interactive().await;
 		return;
 	}
 

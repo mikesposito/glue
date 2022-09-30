@@ -284,6 +284,7 @@ dependencies = [
  "clap",
  "gluerunner",
  "gluescript",
+ "glueshell",
  "tokio",
 ]
 
@@ -304,8 +305,18 @@ name = "gluescript"
 version = "0.1.0-alpha.4"
 dependencies = [
  "colored",
+ "lazy_static",
  "rand",
+ "regex",
  "reqwest",
+]
+
+[[package]]
+name = "glueshell"
+version = "0.1.0-alpha.4"
+dependencies = [
+ "colored",
+ "gluerunner",
 ]
 
 [[package]]

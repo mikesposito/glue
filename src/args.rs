@@ -16,6 +16,7 @@ pub fn command_args() -> Args {
 	Args::parse()
 }
 
+#[allow(dead_code)]
 pub fn print_help() {
 	let mut cmd = Args::command();
 	match cmd.print_help() {

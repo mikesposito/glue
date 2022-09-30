@@ -9,14 +9,18 @@ Make requests, select JSON responses, nest them in other requests: A magnificent
 
 ## Table of Contents
 
-- [Install & Update](#install--update)
-- [Usage](#usage)  
+- [Getting started](#getting-started)
+  - [Install & Update](#install--update)
+  - [Usage](#usage)  
+- [Syntax](#syntax)
+  - [Overview](#overview)
   - [Simple request](#simple-request)
   - [JSON Result selector](#json-result-selector)
   - [Body attributes](#body-attributes)
   - [Headers](#headers)
   - [Nested requests](#nested-requests)
   - [Run file](#run-file)
+  - [Save response in variable](#save-response-in-variable)
 - [Examples](./examples/README.md)
 - [Contributing](#contributing)
   - [Code of conduct](#code-of-conduct)
@@ -24,7 +28,8 @@ Make requests, select JSON responses, nest them in other requests: A magnificent
   - [Good First Issues](#good-first-issues)
 - [License](#license)
 
-## Install & Update
+## Getting started
+### Install & Update
 
 At the moment, you can install or update glue for your system by building it from source. It has been done quite easy by the script `install.sh`.
 
@@ -45,28 +50,67 @@ cd glue
 chmod +x ./install.sh && ./install.sh
 ```
 
-## Usage
+### Usage
 
-### Simple request
+To start an interactive glue shell, simply run:
 
-To execute a request chain with glue you can simply pass it this way:
+```bash
+glue
+```
+
+alternatively, you can also execute a request directly:
 
 ```bash
 glue <REQUEST>
 ```
 
-The simplest request you can do with glue is using simply the method and the url:
+The simplest request you can do with glue is using just the method and the url:
 
 ```bash
-glue "get https://dog.ceo/api/breeds/list/all"
+glue 'get https://dog.ceo/api/breeds/list/all'
+# or in glue shell:
+get https://dog.ceo/api/breeds/list/all
 ```
+
+## Syntax
+
+### Overview
+
+The main gluescipt request syntax is the following:
+
+```bash
+[METHOD] [URL] [OPERATORS]
+```
+
+### Methods available
+
+| Glue Keyword | Description |
+|---|---|
+| `get` | Executes a GET http call |
+| `post` | Executes a POST http call |
+| `patch` | Executes a PATCH http call |
+| `put` | Executes a PUT http call |
+| `delete` | Executes a DELETE http call |
+| `req` | Reuses a saved request response from memory |
+
+### Operators available
+
+Operators allow to execute operations on requests (body, headers params, nesting), on responses (selectors, variables)
+
+| Glue Syntax | Example | Description |
+|---|---|---|
+| `^[selector]` | `^$.message` | [JSON Result Selector](#json-result-selector) |
+| `~[key]=[value]` | `~username=admin` | [Body attribute](#body-attributes) |
+| `*[key]=[value]` | `*authorization=xxx` | [Header attribute](#headers) |
+| `{[nested_request]}` | `get api.com/users/{get api.com/me}` | [Nested request](#nested-requests) |
+| `>[var]` | `>login_request` | [Save response in var](#save-response-in-variable) |
 
 ### JSON result selector
 
 If the response is of type JSON, you can add a jsonpath selector to the request with the char `^`. Glue will only return the desired value from the response. This applies also for [Nested requests](#nested-requests).
 
 ```bash
-glue "get https://dog.ceo/api/breeds/list/all^$.message.terrier"
+get https://dog.ceo/api/breeds/list/all^$.message.terrier
 
 # OUTPUT:
 # > [GET] https://dog.ceo/api/breeds/list/all
@@ -106,9 +150,9 @@ glue "get https://dog.ceo/api/breeds/list/all^$.message.terrier"
 You can use the char `~` to add body attributes to the request:
 
 ```bash
-glue "post https://example.com/user/add~username=admin"
+post https://example.com/user/add~username=admin
 # or
-glue "post https://example.com/user/add ~username=admin"
+post https://example.com/user/add ~username=admin
 
 # glue will send a body of type JSON 
 # with a key "username" with value "admin"
@@ -122,12 +166,18 @@ Body attributes can take their value from another request's response by using [n
 You can use the char `*` to set headers to the request:
 
 ```bash
-glue "post https://example.com/user/add*authorization=6a75d4d7-84c3"
+post https://example.com/user/add*authorization=6a75d4d7-84c3
 # or
-glue "post https://example.com/user/add *authorization=6a75d4d7-84c3"
+post https://example.com/user/add *authorization=6a75d4d7-84c3
 
 # glue will set Authorization header
 # to value "6a75d4d7-84c3"
+```
+
+Quotes can also be use to escape special glue chars or spaces in attributes:
+
+```bash
+post https://example.com/user/add*authorization="Bearer 6a75d4d7-84c3"
 ```
 
 #### **Note**
@@ -144,7 +194,7 @@ Glue supports infinite nesting and will build a dependency tree, divide it in la
 You can use request nesting delimiting the desired nested request with `{}`:
 
 ```bash
-glue "get api.com/users/{ get api.com/me^$.user.id }/"
+get api.com/users/{ get api.com/me^$.user.id }/
 
 # glue will execute this two requests:
 
@@ -156,7 +206,7 @@ glue "get api.com/users/{ get api.com/me^$.user.id }/"
 Request can also be nested inside body or headers parameters:
 
 ```bash
-glue "get api.com/me *authorization={get api.com/login^$.access_token}/"
+get api.com/me *authorization={get api.com/login^$.access_token}/
 ```
 
 ### Run file
@@ -166,6 +216,28 @@ You can also create a file with request to run, and pass the file path to glue w
 ```bash
 glue -f examples/sample-request.glue
 ```
+
+### Save response in variable
+
+You can save a request response in a temporary variable with a name of your choice with the char `>`, to reuse it without executing the call again.
+
+```bash
+get https://dog.ceo/api/breeds/list/all >test_req
+```
+
+to use the saved response:
+
+```bash
+req test_req
+```
+
+You can also use a selector on the saved response with `^`:
+
+```bash
+req test_req^$.message.terrier
+```
+
+**Note**: Variables are available only in the same glueshell session and dropped at the end of it.
 
 ## Contributing
 

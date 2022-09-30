@@ -19,28 +19,86 @@ impl fmt::Display for RequestError {
 	}
 }
 
+type ParallelExecutionLayer = Vec<GlueNode>;
+type ExecutionStack = Vec<ParallelExecutionLayer>;
+
+pub struct RunnerStack {
+	runners: Vec<Runner>,
+	heap: HashMap<String, String>,
+	next: usize,
+}
+
+impl RunnerStack {
+	pub fn new() -> Self {
+		RunnerStack {
+			runners: vec![],
+			heap: HashMap::new(),
+			next: 0,
+		}
+	}
+
+	pub fn from_root_node(root: &GlueNode, log_info: bool) -> Self {
+		let runner = Runner::from_root_node(root, HashMap::new(), log_info);
+		let mut stack = RunnerStack::new();
+		stack.push_runner(runner);
+		stack
+	}
+
+	pub fn push_runner_from_string(
+		self: &mut Self,
+		command: &String,
+		log_info: bool,
+	) -> Result<(), String> {
+		let runner = Runner::from_string(command, log_info)?;
+		self.push_runner(runner);
+		Ok(())
+	}
+
+	pub fn push_runner(self: &mut Self, mut runner: Runner) -> () {
+		runner.heap = self.heap.clone();
+		self.runners.push(runner);
+	}
+
+	pub async fn execute_next(self: &mut Self) -> Result<(), String> {
+		let runner = &mut self.runners[self.next];
+		self.next += 1;
+		runner.execute().await?;
+		self.heap = runner.heap.clone();
+		Ok(())
+	}
+
+	pub fn current(self: &Self) -> Option<&Runner> {
+		match self.next {
+			x if x > 0 => Some(&self.runners[x - 1]),
+			_ => None,
+		}
+	}
+}
+
 #[derive(Debug)]
 pub struct Runner {
-	pub layers: Vec<Vec<GlueNode>>,
+	pub layers: ExecutionStack,
 	pub depth: usize,
 	pub result: Option<String>,
-  pub log_info: bool,
+	pub heap: HashMap<String, String>,
+	pub log_info: bool,
 }
 
 impl Runner {
-	fn new(log_info: bool) -> Self {
+	fn new(heap: HashMap<String, String>, log_info: bool) -> Self {
 		Runner {
 			layers: vec![vec![]],
 			depth: 0,
 			result: None,
-      log_info,
+			heap,
+			log_info,
 		}
 	}
 
 	/// Creates a reversed Runner instance containing all
 	/// node requests in a root node
-	pub fn from_root_node(root: &GlueNode, log_info: bool) -> Self {
-		let mut stack = Runner::new(log_info);
+	pub fn from_root_node(root: &GlueNode, heap: HashMap<String, String>, log_info: bool) -> Self {
+		let mut stack = Runner::new(heap, log_info);
 
 		stack.add_node_recursive(&root);
 		stack.reverse();
@@ -53,7 +111,7 @@ impl Runner {
 	pub fn from_string(command: &String, log_info: bool) -> Result<Self, String> {
 		match GlueNode::from_string(command) {
 			Err(x) => Err(x),
-			Ok(x) => Ok(Runner::from_root_node(&x, log_info)),
+			Ok(x) => Ok(Runner::from_root_node(&x, HashMap::new(), log_info)),
 		}
 	}
 
@@ -65,7 +123,7 @@ impl Runner {
 
 		match GlueNode::from_string(&command) {
 			Err(x) => Err(x),
-			Ok(x) => Ok(Runner::from_root_node(&x, log_info)),
+			Ok(x) => Ok(Runner::from_root_node(&x, HashMap::new(), log_info)),
 		}
 	}
 
@@ -91,26 +149,41 @@ impl Runner {
 			for (i, request) in layer.into_iter().enumerate() {
 				let task_dependencies = dependencies_resolutions.clone();
 				let node = request.clone();
-				tasks.push((i, tokio::spawn(execute_node(node, task_dependencies, self.log_info))));
+				tasks.push((
+					i,
+					tokio::spawn(execute_node(
+						node,
+						task_dependencies,
+						self.heap.clone(),
+						self.log_info,
+					)),
+				));
 			}
 
 			for (i, task) in tasks {
-				match task.await {
+				let result = match task.await {
 					Err(x) => return Err(x.to_string()),
-					Ok(result) => {
-						match result {
-							Err(x) => return Err(x),
-							Ok(node) => {
-								if node.depth == 0 {
-									self.result = Some(String::from(&node.result));
-								}
-								dependencies_resolutions
-									.insert(node.id, String::from(&node.result));
-								layer[i] = node;
-							}
-						};
-					}
+					Ok(x) => x,
+				};
+
+				let executed_node = match result {
+					Err(x) => return Err(x),
+					Ok(x) => x,
+				};
+
+				if executed_node.depth == 0 {
+					self.result = Some(String::from(&executed_node.result));
 				}
+
+				if executed_node.save_as.is_some() {
+					let var_key = String::from(executed_node.clone().save_as.unwrap().trim());
+					self.heap
+						.insert(var_key, String::from(&executed_node.result));
+				}
+
+				dependencies_resolutions
+					.insert(executed_node.id, String::from(&executed_node.result));
+				layer[i] = executed_node;
 			}
 		}
 
@@ -130,7 +203,49 @@ impl Runner {
 	}
 }
 
-pub async fn http_request(
+async fn execute_node(
+	mut node: GlueNode,
+	task_dependencies: HashMap<u32, String>,
+	heap: HashMap<String, String>,
+	log_info: bool,
+) -> Result<GlueNode, String> {
+	if node.dependencies.len() > 0 {
+		for dependency in &node.dependencies {
+			let dependency_result = task_dependencies.get(&dependency.id).unwrap();
+			node.predicate = node.predicate.replacen("{}", dependency_result, 1);
+		}
+	}
+
+	match node.resolve_predicate() {
+		Err(x) => return Err(x),
+		_ => (),
+	};
+
+	if log_info {
+		node.print_info();
+	}
+
+	let result = match node.method.as_str() {
+		// we take the result from the heap if it's a saved variable
+		constants::REQ => String::from(heap.get(&node.url).expect(constants::ERR_UNRESOLVED_VAR)),
+		// instead, an http request is fired
+		_ => match http_request(&node.method, &node.url, &node.headers, &node.body).await {
+			Err(x) => return Err(x.to_string()),
+			Ok(x) => x,
+		},
+	};
+
+	let is_root = node.depth == 0;
+
+	node.result = match get_response_value(&node.result_selector, &result, !is_root, is_root) {
+		Err(x) => return Err(x),
+		Ok(x) => x,
+	};
+
+	Ok(node)
+}
+
+async fn http_request(
 	method: &String,
 	url: &String,
 	headers: &Option<HeaderMap>,
@@ -165,7 +280,7 @@ pub async fn http_request(
 	Ok(response)
 }
 
-pub fn get_response_value(
+fn get_response_value(
 	path: &String,
 	response: &String,
 	just_first_slice_value: bool,
@@ -207,40 +322,4 @@ pub fn get_response_value(
 		Err(x) => Err(x.to_string()),
 		Ok(x) => Ok(x),
 	}
-}
-
-pub async fn execute_node(
-  mut node: GlueNode,
-  task_dependencies: HashMap<u32, String>,
-  log_info: bool,
-) -> Result<GlueNode, String> {
-  if node.dependencies.len() > 0 {
-    for dependency in &node.dependencies {
-      let dependency_result = task_dependencies.get(&dependency.id).unwrap();
-      node.predicate = node.predicate.replacen("{}", dependency_result, 1);
-    }
-  }
-
-  match node.resolve_predicate() {
-    Err(x) => return Err(x),
-    _ => (),
-  };
-
-  if log_info {
-    node.print_info();
-  }
-
-  let result = match http_request(&node.method, &node.url, &node.headers, &node.body).await {
-    Err(x) => return Err(x.to_string()),
-    Ok(x) => x,
-  };
-
-  let is_root = node.depth == 0;
-
-  node.result = match get_response_value(&node.result_selector, &result, !is_root, is_root) {
-    Err(x) => return Err(x),
-    Ok(x) => x,
-  };
-
-  Ok(node)
 }

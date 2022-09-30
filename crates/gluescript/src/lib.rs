@@ -1,9 +1,9 @@
 pub mod constants;
 
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use std::collections::HashMap;
 use colored::*;
 use rand::prelude::random;
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use std::collections::HashMap;
 
 const OPEN_DELIMITER: char = '{';
 const CLOSE_DELIMITER: char = '}';

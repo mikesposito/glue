@@ -24,7 +24,7 @@ pub struct Runner {
 	pub layers: Vec<Vec<GlueNode>>,
 	pub depth: usize,
 	pub result: Option<String>,
-  pub log_info: bool,
+	pub log_info: bool,
 }
 
 impl Runner {
@@ -33,7 +33,7 @@ impl Runner {
 			layers: vec![vec![]],
 			depth: 0,
 			result: None,
-      log_info,
+			log_info,
 		}
 	}
 
@@ -91,7 +91,10 @@ impl Runner {
 			for (i, request) in layer.into_iter().enumerate() {
 				let task_dependencies = dependencies_resolutions.clone();
 				let node = request.clone();
-				tasks.push((i, tokio::spawn(execute_node(node, task_dependencies, self.log_info))));
+				tasks.push((
+					i,
+					tokio::spawn(execute_node(node, task_dependencies, self.log_info)),
+				));
 			}
 
 			for (i, task) in tasks {
@@ -210,37 +213,37 @@ pub fn get_response_value(
 }
 
 pub async fn execute_node(
-  mut node: GlueNode,
-  task_dependencies: HashMap<u32, String>,
-  log_info: bool,
+	mut node: GlueNode,
+	task_dependencies: HashMap<u32, String>,
+	log_info: bool,
 ) -> Result<GlueNode, String> {
-  if node.dependencies.len() > 0 {
-    for dependency in &node.dependencies {
-      let dependency_result = task_dependencies.get(&dependency.id).unwrap();
-      node.predicate = node.predicate.replacen("{}", dependency_result, 1);
-    }
-  }
+	if node.dependencies.len() > 0 {
+		for dependency in &node.dependencies {
+			let dependency_result = task_dependencies.get(&dependency.id).unwrap();
+			node.predicate = node.predicate.replacen("{}", dependency_result, 1);
+		}
+	}
 
-  match node.resolve_predicate() {
-    Err(x) => return Err(x),
-    _ => (),
-  };
+	match node.resolve_predicate() {
+		Err(x) => return Err(x),
+		_ => (),
+	};
 
-  if log_info {
-    node.print_info();
-  }
+	if log_info {
+		node.print_info();
+	}
 
-  let result = match http_request(&node.method, &node.url, &node.headers, &node.body).await {
-    Err(x) => return Err(x.to_string()),
-    Ok(x) => x,
-  };
+	let result = match http_request(&node.method, &node.url, &node.headers, &node.body).await {
+		Err(x) => return Err(x.to_string()),
+		Ok(x) => x,
+	};
 
-  let is_root = node.depth == 0;
+	let is_root = node.depth == 0;
 
-  node.result = match get_response_value(&node.result_selector, &result, !is_root, is_root) {
-    Err(x) => return Err(x),
-    Ok(x) => x,
-  };
+	node.result = match get_response_value(&node.result_selector, &result, !is_root, is_root) {
+		Err(x) => return Err(x),
+		Ok(x) => x,
+	};
 
-  Ok(node)
+	Ok(node)
 }

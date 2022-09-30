@@ -115,7 +115,7 @@ impl Runner {
 				}
 
 				if executed_node.save_as.is_some() {
-					let var_key = executed_node.clone().save_as.unwrap();
+					let var_key = String::from(executed_node.clone().save_as.unwrap().trim());
 					self.heap
 						.insert(var_key, String::from(&executed_node.result));
 				}

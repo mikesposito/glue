@@ -1,8 +1,10 @@
 use colored::*;
-use gluerunner::Runner;
+use gluerunner::RunnerStack;
 use std::io::{stdin, stdout, Write};
 
 pub async fn interactive() -> () {
+	let mut stack = RunnerStack::new();
+
 	loop {
 		let command = prompt();
 
@@ -13,17 +15,17 @@ pub async fn interactive() -> () {
 		let glue_command = command.unwrap();
 
 		if glue_command != "" {
-			let mut runner = match Runner::from_string(&glue_command, false) {
+			match stack.push_runner_from_string(&glue_command, false) {
 				Err(x) => {
 					print_err(x);
 					return;
 				}
-				Ok(x) => x,
+				_ => (),
 			};
 
-			match runner.execute().await {
+			match stack.execute_next().await {
 				Err(x) => print_err(x),
-				Ok(_) => println!("{}", runner.result.unwrap()),
+				Ok(_) => println!("{}", stack.current().unwrap().result.as_ref().unwrap()),
 			};
 		}
 	}

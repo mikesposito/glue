@@ -21,7 +21,7 @@ pub struct GlueNode {
 	pub dependencies: Vec<GlueNode>,
 	pub depth: usize,
 	pub result: String,
-  pub save_as: Option<String>,
+	pub save_as: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -50,7 +50,7 @@ impl GlueNode {
 			dependencies: Vec::new(),
 			depth,
 			result: String::from(""),
-      save_as: None,
+			save_as: None,
 		}
 	}
 
@@ -219,13 +219,13 @@ impl GlueNode {
 		Ok(())
 	}
 
-  fn resolve_save_as(self: &mut Self) -> () {
-    let mut vars = self.predicate.split('>');
-    self.save_as = match vars.nth(1) {
-      None => None,
-      Some(x) => Some(x.to_string()),
-    };
-  }
+	fn resolve_save_as(self: &mut Self) -> () {
+		let mut vars = self.predicate.split('>');
+		self.save_as = match vars.nth(1) {
+			None => None,
+			Some(x) => Some(x.to_string()),
+		};
+	}
 
 	pub fn print_info(self: &Self) -> () {
 		println!(

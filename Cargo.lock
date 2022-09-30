@@ -282,12 +282,30 @@ name = "glue"
 version = "0.1.0-alpha.4"
 dependencies = [
  "clap",
+ "gluerunner",
+ "gluescript",
+ "tokio",
+]
+
+[[package]]
+name = "gluerunner"
+version = "0.1.0-alpha.4"
+dependencies = [
  "colored",
+ "gluescript",
  "jsonpath-rust",
- "rand",
  "reqwest",
  "serde_json",
  "tokio",
+]
+
+[[package]]
+name = "gluescript"
+version = "0.1.0-alpha.4"
+dependencies = [
+ "colored",
+ "rand",
+ "reqwest",
 ]
 
 [[package]]

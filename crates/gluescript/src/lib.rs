@@ -1,13 +1,9 @@
-mod constants;
-mod runner;
+pub mod constants;
 
-use crate::args::command_args;
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use std::collections::HashMap;
 use colored::*;
 use rand::prelude::random;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use runner::{get_response_value, http_request};
-use std::collections::HashMap;
-use std::fs;
 
 const OPEN_DELIMITER: char = '{';
 const CLOSE_DELIMITER: char = '}';
@@ -68,41 +64,6 @@ impl GlueNode {
 		}
 	}
 
-	pub async fn execute(
-		mut self: Self,
-		task_dependencies: HashMap<u32, String>,
-	) -> Result<GlueNode, String> {
-		if self.dependencies.len() > 0 {
-			for dependency in &self.dependencies {
-				let dependency_result = task_dependencies.get(&dependency.id).unwrap();
-				self.predicate = self.predicate.replacen("{}", dependency_result, 1);
-			}
-		}
-
-		match self.resolve_predicate() {
-			Err(x) => return Err(x),
-			_ => (),
-		};
-
-		if command_args().verbose {
-			self.print_info();
-		}
-
-		let result = match http_request(&self.method, &self.url, &self.headers, &self.body).await {
-			Err(x) => return Err(x.to_string()),
-			Ok(x) => x,
-		};
-
-		let is_root = self.depth == 0;
-
-		self.result = match get_response_value(&self.result_selector, &result, !is_root, is_root) {
-			Err(x) => return Err(x),
-			Ok(x) => x,
-		};
-
-		Ok(self)
-	}
-
 	/// Recursively parses the command up until a closing
 	/// delimiter is encountered. It calls itself when a new
 	/// open delimiter is encountered. Returns a wrapped usize
@@ -147,7 +108,7 @@ impl GlueNode {
 
 	/// Reads the predicate and tries to resolve
 	/// method, url and selector
-	fn resolve_predicate(self: &mut Self) -> Result<(), String> {
+	pub fn resolve_predicate(self: &mut Self) -> Result<(), String> {
 		self.resolve_method()?;
 		self.resolve_url()?;
 		self.resolve_selector();
@@ -281,115 +242,5 @@ impl GlueNode {
 impl RequestBody {
 	pub fn new(body_type: RequestBodyType, value: HashMap<String, String>) -> Self {
 		RequestBody { body_type, value }
-	}
-}
-
-/// GlueStack
-#[derive(Debug)]
-pub struct GlueStack {
-	pub layers: Vec<Vec<GlueNode>>,
-	pub depth: usize,
-	pub result: Option<String>,
-}
-
-impl GlueStack {
-	fn new() -> Self {
-		GlueStack {
-			layers: vec![vec![]],
-			depth: 0,
-			result: None,
-		}
-	}
-
-	/// Creates a reversed GlueStack instance containing all
-	/// node requests in a root node
-	pub fn from_root_node(root: &GlueNode) -> Self {
-		let mut stack = GlueStack::new();
-
-		stack.add_node_recursive(&root);
-		stack.reverse();
-
-		stack
-	}
-
-	/// Creates a reversed GlueStack instance containing all
-	/// node requests in a root node created from string
-	pub fn from_string(command: &String) -> Result<Self, String> {
-		match GlueNode::from_string(command) {
-			Err(x) => Err(x),
-			Ok(x) => Ok(GlueStack::from_root_node(&x)),
-		}
-	}
-
-	pub fn from_file(path: &String) -> Result<Self, String> {
-		let command = match fs::read_to_string(path) {
-			Err(x) => return Err(x.to_string()),
-			Ok(x) => x,
-		};
-
-		match GlueNode::from_string(&command) {
-			Err(x) => Err(x),
-			Ok(x) => Ok(GlueStack::from_root_node(&x)),
-		}
-	}
-
-	/// Adds a node to the stack automatically determining
-	/// the layer it belongs to
-	pub fn add_node(self: &mut Self, node: &GlueNode) -> () {
-		if self.depth < node.depth {
-			self.add_layer();
-		}
-		self.layers[self.depth].push(node.to_owned());
-	}
-
-	pub fn reverse(self: &mut Self) -> () {
-		self.layers.reverse();
-	}
-
-	pub async fn execute(self: &mut Self) -> Result<(), String> {
-		let mut dependencies_resolutions: HashMap<u32, String> = HashMap::new();
-
-		for layer in &mut self.layers {
-			let mut tasks = vec![];
-
-			for (i, request) in layer.into_iter().enumerate() {
-				let task_dependencies = dependencies_resolutions.clone();
-				let node = request.clone();
-				tasks.push((i, tokio::spawn(node.execute(task_dependencies))));
-			}
-
-			for (i, task) in tasks {
-				match task.await {
-					Err(x) => return Err(x.to_string()),
-					Ok(result) => {
-						match result {
-							Err(x) => return Err(x),
-							Ok(node) => {
-								if node.depth == 0 {
-									self.result = Some(String::from(&node.result));
-								}
-								dependencies_resolutions
-									.insert(node.id, String::from(&node.result));
-								layer[i] = node;
-							}
-						};
-					}
-				}
-			}
-		}
-
-		Ok(())
-	}
-
-	fn add_layer(self: &mut Self) -> () {
-		self.layers.push(vec![]);
-		self.depth += 1;
-	}
-
-	fn add_node_recursive(self: &mut Self, node: &GlueNode) -> () {
-		self.add_node(node);
-		for dep_node in &node.dependencies {
-			self.add_node_recursive(dep_node);
-		}
 	}
 }

@@ -27,8 +27,6 @@ pub async fn interactive() -> () {
 				Err(x) => print_err(x),
 				Ok(_) => println!("{}", stack.current().unwrap().result.as_ref().unwrap()),
 			};
-
-      println!("{:#?}", stack.current());
 		}
 	}
 }

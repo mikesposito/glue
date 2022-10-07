@@ -47,4 +47,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: glue_${{ matrix.target }}
-          path: target/release/glue
+          path: /home/runner/work/glue/glue/target/release/glue

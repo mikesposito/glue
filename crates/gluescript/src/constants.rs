@@ -1,3 +1,6 @@
+pub const OPEN_DELIMITER: char = '{';
+pub const CLOSE_DELIMITER: char = '}';
+
 pub const GET: &str = "get";
 pub const POST: &str = "post";
 pub const PUT: &str = "put";

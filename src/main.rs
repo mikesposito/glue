@@ -1,7 +1,7 @@
 mod args;
 
 use args::{command_args, Args};
-use gluerunner::{Runner, utils::heap};
+use gluerunner::{heap, Runner};
 
 #[tokio::main]
 async fn main() {

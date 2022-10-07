@@ -1,5 +1,5 @@
 use colored::*;
-use gluerunner::{Stack};
+use gluerunner::Stack;
 use std::io::{stdin, stdout, Write};
 
 pub async fn interactive() -> () {
@@ -19,7 +19,7 @@ pub async fn interactive() -> () {
 				Err(x) => {
 					print_err(x);
 					return;
-				},
+				}
 				_ => (),
 			};
 

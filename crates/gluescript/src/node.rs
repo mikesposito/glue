@@ -135,7 +135,7 @@ impl GlueNode {
 					// build_tree_recursive() is called for the newly created dependency
 					// and its result is used to know where is the next closing delimiter.
 					// Err is propagated on dependency parsing failure.
-					skip_till = dependency.build_tree_recursive()? + 1;
+					skip_till = dependency.build_tree_recursive()? + i;
 
 					// Dependency is pushed into the `dependencies` collection.
 					self.dependencies.push(dependency);

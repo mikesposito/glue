@@ -1,4 +1,3 @@
-use clap::CommandFactory;
 use clap::Parser;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -14,12 +13,4 @@ pub struct Args {
 
 pub fn command_args() -> Args {
 	Args::parse()
-}
-
-#[allow(dead_code)]
-pub fn print_help() {
-	let mut cmd = Args::command();
-	match cmd.print_help() {
-		_ => (),
-	}
 }

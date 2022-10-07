@@ -21,6 +21,6 @@ if [[ "$OS" == "macos" || "$OS" == "linux" ]]; then
   fi
 
   cargo build --release --all --target $target --features=static-link-openssl
-elif
+else
   cargo build --target $TARGET --release
 fi

@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@master
 
       - name: Install Rust Toolchain Components
-        uses: actions-rs/toolchain
+        uses: actions-rs/toolchain@v1
         with:
           override: true
           profile: minimal

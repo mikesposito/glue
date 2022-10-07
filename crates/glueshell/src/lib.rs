@@ -1,9 +1,9 @@
 use colored::*;
-use gluerunner::RunnerStack;
+use gluerunner::{Stack};
 use std::io::{stdin, stdout, Write};
 
 pub async fn interactive() -> () {
-	let mut stack = RunnerStack::new();
+	let mut stack = Stack::new();
 
 	loop {
 		let command = prompt();
@@ -19,7 +19,7 @@ pub async fn interactive() -> () {
 				Err(x) => {
 					print_err(x);
 					return;
-				}
+				},
 				_ => (),
 			};
 

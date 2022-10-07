@@ -1,7 +1,7 @@
 mod args;
 
 use args::{command_args, Args};
-use gluerunner::Runner;
+use gluerunner::{Runner, utils::heap};
 
 #[tokio::main]
 async fn main() {
@@ -12,12 +12,14 @@ async fn main() {
 		return;
 	}
 
+	let heap = heap();
+
 	let mut glue_runner = match args.file {
-		None => match Runner::from_string(&args.request.unwrap(), args.verbose) {
+		None => match Runner::from_string(&args.request.unwrap(), heap, args.verbose) {
 			Err(x) => panic!("Error encountered while creating glue: {}", x),
 			Ok(x) => x,
 		},
-		Some(x) => match Runner::from_file(&x, args.verbose) {
+		Some(x) => match Runner::from_file(&x, heap, args.verbose) {
 			Err(x) => panic!("Error encountered while creating glue: {}", x),
 			Ok(x) => x,
 		},

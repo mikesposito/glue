@@ -7,3 +7,4 @@ authors = ["Michele Esposito<michele@esposito.codes>"]
 [dependencies]
 colored = "2.0.0"
 gluerunner = { path = "../gluerunner", version = "0.1.0-alpha.4" }
+gluescript = { path = "../gluescript", version = "0.1.0-alpha.4" }

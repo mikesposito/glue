@@ -1,11 +1,14 @@
 pub mod constants;
 
 use colored::*;
+use lazy_static::lazy_static;
 use rand::prelude::random;
 use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use std::collections::HashMap;
-use lazy_static::lazy_static;
+use std::{
+	collections::HashMap,
+	sync::{Arc, Mutex},
+};
 
 const OPEN_DELIMITER: char = '{';
 const CLOSE_DELIMITER: char = '}';
@@ -237,6 +240,30 @@ impl GlueNode {
 		};
 	}
 
+	pub fn resolve_dependencies(
+		self: &mut Self,
+		task_dependencies: Arc<Mutex<HashMap<u32, String>>>,
+	) -> Result<(), String> {
+		let task_dependencies = task_dependencies.lock().unwrap();
+
+		if self.dependencies.len() > 0 {
+			let dep_ids: Vec<u32> = self.dependencies.iter().map(|dep| dep.id).collect();
+
+			for id in dep_ids.into_iter() {
+				self.predicate =
+					self.predicate
+						.replacen("{}", task_dependencies.get(&id).unwrap(), 1);
+			}
+		}
+
+		match self.resolve_predicate() {
+			Err(x) => return Err(x),
+			_ => (),
+		};
+
+		Ok(())
+	}
+
 	pub fn print_info(self: &Self) -> () {
 		println!(
 			"> {} {}",
@@ -267,17 +294,17 @@ impl RequestBody {
 }
 
 fn exclude_quoted_text(input: String) -> String {
-  lazy_static! {
-    static ref RE: Regex = Regex::new(r#""(.*?)""#).unwrap();
-  }
+	lazy_static! {
+		static ref RE: Regex = Regex::new(r#""(.*?)""#).unwrap();
+	}
 
 	RE.replace_all(&input, "").to_string()
 }
 
 fn trim_and_remove_quotes(mut input: String) -> String {
-  input = String::from(input.trim());
-  if input.starts_with('"') && input.ends_with('"') {
-    input = String::from(&input[1..input.len()-2])
-  }
-  input
+	input = String::from(input.trim());
+	if input.starts_with('"') && input.ends_with('"') {
+		input = String::from(&input[1..input.len() - 2])
+	}
+	input
 }

@@ -1,5 +1,5 @@
-use gluerunner::Stack;
 use colored::*;
+use gluerunner::Stack;
 use std::io::{stdin, stdout, Write};
 
 /// An interactive shell that runs glue commands using a stack.
@@ -64,7 +64,7 @@ impl Shell {
 		let mut line = String::new();
 
 		print!("{} ", "glue >".green());
-		
+
 		// Flush stdout to remove newline after prompt.
 		stdout().flush().unwrap();
 

@@ -1,0 +1,49 @@
+on:
+  pull_request:
+    types: 
+      - synchronize
+
+jobs:
+  release:
+    name: pre release ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            archive: zip
+          - target: x86_64-apple-darwin
+            archive: zip
+          - target: x86_64-pc-windows-msvc
+            archive: zip
+          - target: x86_64-unknown-linux-gnu
+            archive: tar.gz tar.xz
+          - target: x86_64-unknown-linux-musl
+            archive: tar.gz tar.xz
+          - target: aarch64-unknown-linux-gnu
+            archive: tar.gz tar.xz
+          - target: armv7-unknown-linux-gnueabihf
+            archive: tar.gz tar.xz
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Install Rust Toolchain Components
+        uses: actions-rs/toolchain
+        with:
+          override: true
+          profile: minimal
+          toolchain: stable
+          target: ${{ matrix.target }}
+
+      - name: Build
+        id: sh
+        run: sh .github/workflows/scripts/build.sh
+        env:
+          TARGET: ${{ matrix.target }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: glue_${{ matrix.target }}
+          path: target/release/glue

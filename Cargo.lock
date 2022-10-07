@@ -279,7 +279,7 @@ dependencies = [
 
 [[package]]
 name = "glue"
-version = "0.1.0-alpha.4"
+version = "0.1.0-beta"
 dependencies = [
  "clap",
  "gluerunner",
@@ -290,7 +290,7 @@ dependencies = [
 
 [[package]]
 name = "gluerunner"
-version = "0.1.0-alpha.4"
+version = "0.1.0-beta"
 dependencies = [
  "colored",
  "gluescript",
@@ -302,7 +302,7 @@ dependencies = [
 
 [[package]]
 name = "gluescript"
-version = "0.1.0-alpha.4"
+version = "0.1.0-beta"
 dependencies = [
  "colored",
  "lazy_static",
@@ -313,7 +313,7 @@ dependencies = [
 
 [[package]]
 name = "glueshell"
-version = "0.1.0-alpha.4"
+version = "0.1.0-beta"
 dependencies = [
  "colored",
  "gluerunner",

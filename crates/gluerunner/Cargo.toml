@@ -1,12 +1,12 @@
 [package]
 name = "gluerunner"
-version = "0.1.0-alpha.4"
+version = "0.1.0-beta"
 edition = "2021"
 authors = ["Michele Esposito<michele@esposito.codes>"]
 
 [dependencies]
 colored = "2.0.0"
-gluescript = { path = "../gluescript", version = "0.1.0-alpha.4" }
+gluescript = { path = "../gluescript", version = "0.1.0-beta" }
 reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
 jsonpath-rust = "0.1.6"

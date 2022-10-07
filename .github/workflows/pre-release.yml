@@ -14,18 +14,25 @@ jobs:
         include:
           - target: aarch64-apple-darwin
             archive: zip
+            os: macos
           - target: x86_64-apple-darwin
             archive: zip
+            os: macos
           - target: x86_64-pc-windows-msvc
             archive: zip
+            os: win
           - target: x86_64-unknown-linux-gnu
             archive: tar.gz tar.xz
+            os: linux
           - target: x86_64-unknown-linux-musl
             archive: tar.gz tar.xz
+            os: linux
           - target: aarch64-unknown-linux-gnu
             archive: tar.gz tar.xz
+            os: linux
           - target: armv7-unknown-linux-gnueabihf
             archive: tar.gz tar.xz
+            os: linux
     steps:
       - uses: actions/checkout@master
 
@@ -42,6 +49,7 @@ jobs:
         run: sh .github/workflows/scripts/build.sh
         env:
           TARGET: ${{ matrix.target }}
+          OS: ${{ matrix.os }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3

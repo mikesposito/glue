@@ -3,7 +3,7 @@
 # Install target component
 rustup target add $TARGET
 
-if [[ "$OS" == "macos" || "$OS" == "linux" ]]; then
+if [[ "$OS" == "macos" ] || [ "$OS" == "linux" ]]; then
   if [[ "$OS" == "linux" ]]; then
     sudo apt-get install libxcb-composite0-dev -y
   fi

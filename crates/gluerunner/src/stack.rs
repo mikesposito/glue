@@ -103,7 +103,7 @@ impl Stack {
 	/// Returns None if there is no `Runner` to execute.
 	pub fn current(self: &Self) -> Option<&Runner> {
 		match self.current {
-			x if x > 0 => Some(&self.runners[x]),
+			x if x > 0 => Some(&self.runners[x - 1]),
 			_ => None,
 		}
 	}

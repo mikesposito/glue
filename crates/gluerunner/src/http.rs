@@ -28,15 +28,25 @@ pub async fn execute_node(
 		w_node.print_info();
 	}
 
+	// Clone the method string from the node
+	let method = String::from(&w_node.method);
+
+	// Release the lock on `node` to allow http_request to run.
+	drop(w_node);
+
 	// Get `GlueNode` result executing http request or read from the heap
-	let result = match w_node.method.as_str() {
+	let result = match method.as_str() {
 		// Take the result from the heap if it's a saved variable
-		constants::REQ => String::from(
-			heap.lock()
-				.unwrap()
-				.get(&w_node.url)
-				.expect(constants::ERR_UNRESOLVED_VAR),
-		),
+		constants::REQ => {
+			let r_node = node.lock().unwrap();
+
+			String::from(
+				heap.lock()
+					.unwrap()
+					.get(&r_node.url)
+					.expect(constants::ERR_UNRESOLVED_VAR),
+			)
+		}
 
 		// Or with other methods, an http request is fired
 		_ => match send_http_request(Arc::clone(&node)).await {
@@ -44,6 +54,9 @@ pub async fn execute_node(
 			Ok(x) => x,
 		},
 	};
+
+	// Lock writable node again to continue operations on it.
+	let mut w_node = node.lock().unwrap();
 
 	// The `GlueNode` is considered to be root if its depth is 0
 	let is_root = w_node.depth == 0;

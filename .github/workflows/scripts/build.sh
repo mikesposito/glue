@@ -25,5 +25,8 @@ if [ "$OS" == "macos" ] || [ "$OS" == "linux" ]; then
 
   cargo build --release --all --target "$TARGET" --features=static-link-openssl
 else
+  sudo apt-get install -y gdb-mingw-w64 gcc-mingw-w64-x86-64
+  export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER="x86_64-w64-mingw32-gcc"
+
   cargo build --target "$TARGET" --release
 fi

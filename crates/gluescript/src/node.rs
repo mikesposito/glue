@@ -2,7 +2,7 @@ use crate::{
 	constants, exclude_quoted_text,
 	utils::{
 		extract_and_mask_quoted_text, get_raw_json_body, is_value_a_quoted_reference,
-		quoted_reference_to_value, resolve_key_and_value, remove_serialization_placeholders,
+		quoted_reference_to_value, remove_serialization_placeholders, resolve_key_and_value,
 	},
 	RequestBody, RequestBodyType, Serialized,
 };

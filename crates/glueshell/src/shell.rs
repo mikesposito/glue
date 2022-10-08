@@ -8,18 +8,22 @@ use std::io::{stdin, stdout, Write};
 pub struct Shell {
 	/// The `Stack` instance of the shell.
 	/// This instance lives for the entire `Shell` instance lifetime.
-	stack: Stack,
+	pub stack: Stack,
 
 	/// Collection of all previous run commands.
 	history: Vec<String>,
+
+	/// Verbose mode toggle
+	verbose: bool,
 }
 
 impl Shell {
 	/// Creates a new `Shell` instance with an empty `Stack`.
-	pub fn new() -> Self {
+	pub fn new(verbose: bool) -> Self {
 		Shell {
 			stack: Stack::new(),
 			history: vec![],
+			verbose,
 		}
 	}
 
@@ -56,6 +60,24 @@ impl Shell {
 				};
 			}
 		}
+	}
+
+	/// Load content of a file into the execution stack.
+	pub fn load_file(self: &mut Self, path: String) -> Result<(), String> {
+		self.stack.push_from_file(path, self.verbose)?;
+		Ok(())
+	}
+
+	/// Execute all runners in the stack consecutively.
+	pub async fn execute_all(self: &mut Self) -> Result<(), String> {
+		self.stack.execute_all().await?;
+		Ok(())
+	}
+
+	/// Add command to execution stack.
+	pub fn command(self: &mut Self, command: String) -> Result<(), String> {
+		self.stack.push_runner_from_string(&command, self.verbose)?;
+		Ok(())
 	}
 
 	/// Command prompt from stdin.

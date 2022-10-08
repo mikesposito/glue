@@ -125,5 +125,7 @@ pub fn deserialize(input: String, components: &Vec<String>) -> String {
 }
 
 pub fn remove_serialization_placeholders(input: &String) -> String {
-	SERIALIZATION_PLACEHOLDER_RE.replace_all(input.as_str(), "").to_string()
+	SERIALIZATION_PLACEHOLDER_RE
+		.replace_all(input.as_str(), "")
+		.to_string()
 }

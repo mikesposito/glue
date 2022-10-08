@@ -1,6 +1,5 @@
 use crate::{constants, exclude_quoted_text, trim_and_remove_quotes, RequestBody, RequestBodyType};
 use colored::*;
-use rand::prelude::random;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use std::{
 	collections::HashMap,
@@ -18,10 +17,6 @@ use std::{
 /// is resolved and executed.
 #[derive(Debug, Clone)]
 pub struct GlueNode {
-	/// Numeric unique identifier of the `GlueNode`.
-	/// Value is obtained randomly on creation.
-	pub id: u32,
-
 	/// String value associated at creation time and used
 	/// to calculate other struct data after its parsing.
 	pub command: String,
@@ -73,7 +68,6 @@ impl GlueNode {
 	/// structure.
 	pub fn new(command: &String, depth: usize) -> Self {
 		GlueNode {
-			id: random(),
 			command: String::from(command),
 			predicate: String::from(""),
 			method: String::from(""),

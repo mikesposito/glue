@@ -14,8 +14,8 @@ use std::{
 /// on parallel.
 #[derive(Debug)]
 pub struct Runner {
-	/// Root `GlueNode` of the runner. Holds the ownership of the main request 
-	/// struct to be executed. `self.layers` are build starting from this. 
+	/// Root `GlueNode` of the runner. Holds the ownership of the main request
+	/// struct to be executed. `self.layers` are build starting from this.
 	pub root: MuxNode,
 
 	/// Vector of Vector of `Runner`. Each `Runner` is behind an `Arc<Mutex<T>>`

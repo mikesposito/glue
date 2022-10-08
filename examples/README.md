@@ -7,6 +7,7 @@
 
 ## Attributes
 * [Body attributes](./request-with-body.glue)
+* [Raw JSON body](./raw-json-body.glue)
 * [Headers](./request-with-headers.glue)
 
 ## Nesting

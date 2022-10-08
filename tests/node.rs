@@ -1,7 +1,8 @@
 use gluescript::node::GlueNode;
 
 const SIMPLE_COMMAND: &str = "get http://example.com";
-const SIMPLE_COMMAND_WITH_BODY: &str = r#"get http://example.com~username=admin~password="xxx-?|>^-*~xx""#;
+const SIMPLE_COMMAND_WITH_BODY: &str =
+	r#"get http://example.com~username=admin~password="xxx-?|>^-*~xx""#;
 const SIMPLE_COMMAND_WITH_HEADERS: &str =
 	r#"get http://example.com*Authorization="Bearer xxx-?|>^-*~xx""#;
 const WITH_SELECTOR_NESTED_COMMAND: &str = "get http://example.com/{post http://test.com^$.id}/";

@@ -8,3 +8,6 @@ pub use request_body::{RequestBody, RequestBodyType};
 
 pub mod utils;
 pub use utils::{exclude_quoted_text, trim_and_remove_quotes};
+
+pub mod serialized;
+pub use serialized::Serialized;

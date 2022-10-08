@@ -1,10 +1,10 @@
 use crate::{
 	constants, exclude_quoted_text,
 	utils::{
-		extract_and_mask_quoted_text, is_value_a_quoted_reference, quoted_reference_to_value,
-		resolve_key_and_value,
+		extract_and_mask_quoted_text, get_raw_json_body, is_value_a_quoted_reference,
+		quoted_reference_to_value, resolve_key_and_value, remove_serialization_placeholders,
 	},
-	RequestBody, RequestBodyType,
+	RequestBody, RequestBodyType, Serialized,
 };
 use colored::*;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
@@ -24,9 +24,9 @@ use std::{
 /// is resolved and executed.
 #[derive(Debug, Clone)]
 pub struct GlueNode {
-	/// String value associated at creation time and used
+	/// `Serialized` value associated at creation time and used
 	/// to calculate other struct data after its parsing.
-	pub command: String,
+	pub command: Serialized,
 
 	/// String value associated after `command` parsing.
 	/// Similar use of `command`, but it is intended to
@@ -75,7 +75,7 @@ impl GlueNode {
 	/// structure.
 	pub fn new(command: &String, depth: usize) -> Self {
 		GlueNode {
-			command: String::from(command),
+			command: Serialized::new(command.to_owned()),
 			predicate: String::from(""),
 			method: String::from(""),
 			url: String::from(""),
@@ -116,7 +116,7 @@ impl GlueNode {
 		let mut skip_till: usize = 0;
 
 		// Parse the command, char by char.
-		for (i, char) in &mut self.command.chars().enumerate() {
+		for (i, char) in &mut self.command.serialized().chars().enumerate() {
 			// Skip parsing if cursor is in a dependency
 			if skip_till > 0 && i <= skip_till + 1 {
 				continue;
@@ -130,8 +130,10 @@ impl GlueNode {
 					// Create a new `GlueNode` instance from a `command`
 					// based on a substring of `self.command`, starting from
 					// the current cursor index. Depth is incrementally assigned.
-					let mut dependency =
-						GlueNode::new(&self.command[(i + 1)..].to_string(), self.depth + 1);
+					let mut dependency = GlueNode::new(
+						&self.command.serialized()[(i + 1)..].to_string(),
+						self.depth + 1,
+					);
 
 					// build_tree_recursive() is called for the newly created dependency
 					// and its result is used to know where is the next closing delimiter.
@@ -193,9 +195,10 @@ impl GlueNode {
 	/// Resolve http request canonical url from `self.predicate`.
 	/// Error is returned is no url is found.
 	fn resolve_url(self: &mut Self) -> Result<(), String> {
+		let clean_predicate = remove_serialization_placeholders(&self.predicate);
 		// Url should always be the second token of the predicate,
 		// preceded by a space, but not necessarily followed by it.
-		let resource = match self.predicate.trim().split(' ').nth(1) {
+		let resource = match clean_predicate.trim().split(' ').nth(1) {
 			None => return Err(String::from(constants::ERR_UNRESOLVED_URL)),
 			Some(x) => x,
 		};
@@ -280,37 +283,61 @@ impl GlueNode {
 	/// Resolve http request body `self.predicate`.
 	/// Err is returned on failure.
 	fn resolve_body(self: &mut Self) -> Result<(), String> {
-		let mut request_body: HashMap<String, String> = HashMap::new();
+		// Predicate is deserialized using command serialization components
+		self.predicate = self.command.deserialize_part(self.predicate.clone());
 
-		// Get a sanitized string that excludes text between quotes.
-		// Also save the extracted text in a vector to later reuse it.
-		let (sanitized, quoted_text) = extract_and_mask_quoted_text(self.predicate.clone());
+		match get_raw_json_body(&self.predicate) {
+			// If there is no raw json in the predicate, start looking
+			// at single attributes.
+			None => {
+				let mut request_body: HashMap<String, String> = HashMap::new();
 
-		// Divide the body attributes in parts, as each header is always
-		// preceded by `~`.
-		let mut body_parts = sanitized.split('~');
+				// Get a sanitized string that excludes text between quotes.
+				// Also save the extracted text in a vector to later reuse it.
+				let (sanitized, quoted_text) = extract_and_mask_quoted_text(self.predicate.clone());
 
-		// The first is always the url and selector
-		body_parts.next();
+				// Divide the body attributes in parts, as each header is always
+				// preceded by `~`.
+				let mut body_parts = sanitized.split('~');
 
-		for attribute in body_parts.into_iter() {
-			// Sanitize the attribute removing any other operator from it
-			let sanitized = attribute.split(['\n', '\t', '^', '~']).nth(0).unwrap();
+				// The first is always the url and selector
+				body_parts.next();
 
-			// Extract key and value from attribute
-			let (key, mut value) = resolve_key_and_value(sanitized.to_string())?;
+				for attribute in body_parts.into_iter() {
+					// Sanitize the attribute removing any other operator from it
+					let sanitized = attribute.split(['\n', '\t', '^', '~']).nth(0).unwrap();
 
-			if is_value_a_quoted_reference(value.clone()) {
-				value = quoted_reference_to_value(value, &quoted_text)?;
+					// Extract key and value from attribute
+					let (key, mut value) = resolve_key_and_value(sanitized.to_string())?;
+
+					// If value is a quoted reference (value temporary removed because
+					// was quoted) - then replace reference with real value
+					if is_value_a_quoted_reference(value.clone()) {
+						value = quoted_reference_to_value(value, &quoted_text)?;
+					}
+
+					// Add key-value pair to body map
+					request_body.insert(key, value);
+				}
+
+				// Set `GlueNode` body map if at least one attribute has been parsed.
+				if !request_body.is_empty() {
+					self.body = Some(RequestBody::new(
+						RequestBodyType::JSON,
+						Some(request_body),
+						None,
+					));
+				}
 			}
 
-			// Add key-value pair to body map
-			request_body.insert(key, value);
-		}
-
-		// Set `GlueNode` body map if at least one attribute has been parsed.
-		if !request_body.is_empty() {
-			self.body = Some(RequestBody::new(RequestBodyType::JSON, request_body));
+			// Append raw json to body in case it has been found.
+			Some(json) => {
+				self.body = Some(RequestBody::new(
+					RequestBodyType::ARBITRARY,
+					None,
+					Some(json),
+				));
+			}
 		}
 
 		Ok(())

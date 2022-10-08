@@ -45,8 +45,8 @@ jobs:
           target: ${{ matrix.target }}
 
       - name: Build
-        id: sh
-        run: sh .github/workflows/scripts/build.sh
+        id: bash
+        run: bash .github/workflows/scripts/build.sh
         env:
           TARGET: ${{ matrix.target }}
           OS: ${{ matrix.os }}

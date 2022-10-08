@@ -129,8 +129,7 @@ impl Runner {
 			let mut tasks = vec![];
 
 			for request in layer.iter() {
-				// We lock the dependency map in read mode to let the `GlueNode`
-				// resolve its own dependencies based on previous runs.
+				// We lock the node in write mode.
 				let mut w_request = request.lock().unwrap();
 
 				// As all dependencies should have been executed already, `request`
@@ -147,18 +146,13 @@ impl Runner {
 
 			for task in tasks {
 				// Polling on each task to block execution flow till they are ready.
-				let (depth, response) = match task.await {
-					Err(x) => return Err(x),
-					Ok(x) => x,
-				};
-
-				if depth == 0 {
-					// If the depth of the `GlueNode` is 0, it means it is the root one,
-					// and last to be executed, so its result also equals to the `Runner` result.
-					self.result = Some(response);
-				}
+				// Await is done by the main thread.
+				task.await?;
 			}
 		}
+		
+		// Assign root node result to `Runner` result.
+		self.result = Some(String::from(&self.root.lock().unwrap().result));
 
 		Ok(())
 	}

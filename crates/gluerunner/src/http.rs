@@ -10,7 +10,7 @@ pub async fn execute_node(
 	node: MuxNode,
 	heap: HeapMap,
 	log_info: bool,
-) -> Result<(usize, String), String> {
+) -> Result<(), String> {
 	// Acquire write lock on `GlueNode` mutex.
 	let mut w_node = node.lock().unwrap();
 
@@ -84,7 +84,7 @@ pub async fn execute_node(
 		drop(heap);
 	}
 
-	Ok((w_node.depth, String::from(&w_node.result)))
+	Ok(())
 }
 
 /// Executes HTTP request declared in `node`.

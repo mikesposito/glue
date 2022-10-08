@@ -21,9 +21,9 @@ members = ["crates/gluescript", "crates/gluerunner", "crates/glueshell"]
 [dependencies]
 clap = { version = "3.2.17", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
-gluerunner = { path = "./crates/gluerunner" }
-gluescript = { path = "./crates/gluescript" }
-glueshell = { path = "./crates/glueshell" }
+gluerunner = { path = "./crates/gluerunner", version = "0.1.0" }
+gluescript = { path = "./crates/gluescript", version = "0.1.0" }
+glueshell = { path = "./crates/glueshell", version = "0.1.0" }
 
 [[bin]]
 name = "glue"

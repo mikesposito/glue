@@ -16,5 +16,5 @@ keywords = [
 
 [dependencies]
 colored = "2.0.0"
-gluerunner = { path = "../gluerunner" }
-gluescript = { path = "../gluescript" }
+gluerunner = { path = "../gluerunner", version = "0.1.0" }
+gluescript = { path = "../gluescript", version = "0.1.0" }

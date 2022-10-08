@@ -278,7 +278,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "glue"
+name = "glue-cli"
 version = "0.1.0-beta"
 dependencies = [
  "clap",

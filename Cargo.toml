@@ -1,10 +1,11 @@
 [package]
-name = "glue"
+name = "glue-cli"
 version = "0.1.0-beta"
 edition = "2021"
 description = "A blazingly fast HTTP client with a magnificent request building syntax, made for humans."
 authors = ["mikesposito"]
 license-file = "LICENSE"
+readme="README.md"
 repository = "https://github.com/mikesposito/glue/"
 keywords = [
 	"language",

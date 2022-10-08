@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 # Install target component
-rustup target add $TARGET
+#rustup target add $TARGET
 
 # Install openssl
-sudo apt-get install pkg-config libssl-dev
+#sudo apt-get install pkg-config libssl-dev
 
 if [ "$OS" == "macos" ] || [ "$OS" == "linux" ]; then
   if [[ "$OS" == "linux" ]]; then
@@ -23,7 +23,7 @@ if [ "$OS" == "macos" ] || [ "$OS" == "linux" ]; then
     fi
   fi
 
-  cargo build --release --all --target $target --features=static-link-openssl
+  cargo build --release --all --target "$TARGET" --features=static-link-openssl
 else
-  cargo build --target $TARGET --release
+  cargo build --target "$TARGET" --release
 fi

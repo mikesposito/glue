@@ -18,7 +18,7 @@ jobs:
           - target: x86_64-apple-darwin
             archive: zip
             os: macos
-          - target: x86_64-pc-windows-msvc
+          - target: x86_64-pc-windows-gnu
             archive: zip
             os: win
           - target: x86_64-unknown-linux-gnu

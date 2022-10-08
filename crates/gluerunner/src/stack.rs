@@ -1,6 +1,6 @@
 use crate::{heap, HeapMap, Runner};
 use gluescript::GlueNode;
-use std::sync::Arc;
+use std::{fs, sync::Arc};
 
 /// A sequential executor of `Runner` instances.
 ///
@@ -54,8 +54,26 @@ impl Stack {
 		stack
 	}
 
-	/// Create a new `Stack` instance starting from a `String`.
-	/// The supplied `String` is used to create a `Runner`.
+	/// Read content from file and push everything in the stack from it.
+	/// Allow to create a stack from a file containing more than one root `GlueNode`
+	pub fn push_from_file(self: &mut Self, path: String, log_info: bool) -> Result<(), String> {
+		// Read content from file and propagate error on failure
+		let content = match fs::read_to_string(path) {
+			Err(x) => return Err(x.to_string()),
+			Ok(x) => x,
+		};
+
+		// Each command in the file must end with `;`
+		for command in content.split(';') {
+			// Add command directly to stack, without executing it.
+			self.push_runner_from_string(&command.to_owned(), log_info)?;
+		}
+
+		Ok(())
+	}
+
+	/// Create a new `Runner` instance starting from a `String` and push it
+	/// into the `Stack`.
 	///
 	/// If the `Runner` creation fails for some reason, an `Err` is returned.
 	/// The created `Runner` will receive the `Arc` heap map from the fresh `Stack`.
@@ -95,6 +113,20 @@ impl Stack {
 		// runner execution is awaited to be able to use all its results
 		// in the subsequent runners.
 		runner.execute().await?;
+		Ok(())
+	}
+
+	pub async fn execute_all(self: &mut Self) -> Result<(), String> {
+		loop {
+			if self.current > self.runners.len() - 1 {
+				break;
+			}
+
+			self.execute_next().await?;
+
+			println!("{}", self.current().unwrap().result.clone().unwrap());
+		}
+
 		Ok(())
 	}
 

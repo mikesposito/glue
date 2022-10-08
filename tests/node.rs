@@ -1,22 +1,12 @@
-use std::{
-	collections::HashMap,
-	sync::{Arc, Mutex},
-};
-
 use gluescript::node::GlueNode;
 
 const SIMPLE_COMMAND: &str = "get http://example.com";
 const SIMPLE_COMMAND_WITH_BODY: &str = "get http://example.com~username=admin~password=test";
-const SIMPLE_COMMAND_WITH_HEADERS: &str =
-	r#"get http://example.com*Authorization="Bearer xxx-?|>^-~*x""#;
+// const SIMPLE_COMMAND_WITH_HEADERS: &str = r#"get http://example.com*Authorization="Bearer xxx-?|>^-""#;
 const WITH_SELECTOR_NESTED_COMMAND: &str = "get http://example.com/{post http://test.com^$.id}/";
 
 fn get_node(command: String) -> GlueNode {
 	GlueNode::from_string(&command).unwrap()
-}
-
-fn get_dep_map() -> Arc<Mutex<HashMap<u32, String>>> {
-	Arc::new(Mutex::new(HashMap::new()))
 }
 
 #[test]
@@ -44,18 +34,16 @@ fn it_resolves_dependency_correctly() {
 	let mut node = get_node(WITH_SELECTOR_NESTED_COMMAND.to_string());
 	assert_eq!(node.dependencies.len(), 1);
 
-	node.dependencies[0].resolve_predicate().unwrap();
-	assert_eq!(node.dependencies[0].url, "http://test.com");
-	assert_eq!(node.dependencies[0].method, "post");
-	assert_eq!(node.dependencies[0].result_selector, "$.id");
+	let mut w_dep = node.dependencies[0].lock().unwrap();
+	w_dep.resolve_predicate().unwrap();
+	assert_eq!(w_dep.url, "http://test.com");
+	assert_eq!(w_dep.method, "post");
+	assert_eq!(w_dep.result_selector, "$.id");
 
-	let deps = get_dep_map();
+	w_dep.result = "test".to_string();
+	drop(w_dep);
 
-	let mut w_deps = deps.lock().unwrap();
-	w_deps.insert(node.dependencies[0].id, "test".to_string());
-	drop(w_deps);
-
-	node.resolve_dependencies(Arc::clone(&deps)).unwrap();
+	node.resolve_dependencies();
 	node.resolve_predicate().unwrap();
 
 	assert_eq!(node.url, "http://example.com/test/".to_string());
@@ -85,26 +73,16 @@ fn it_resolves_body_correctly() {
 	);
 }
 
-#[test]
-fn it_resolves_headers_correctly() {
-	let mut node = get_node(SIMPLE_COMMAND_WITH_HEADERS.to_string());
-	node.resolve_predicate().unwrap();
-	assert_eq!(
-		"Authorization",
-		node.body
-			.clone()
-			.unwrap()
-			.value
-			.get(&"username".to_string())
-			.unwrap()
-	);
-	assert_eq!(
-		"Bearer xxx-?|>^-~*x",
-		node.body
-			.clone()
-			.unwrap()
-			.value
-			.get(&"password".to_string())
-			.unwrap()
-	);
-}
+// #[test]
+// fn it_resolves_headers_correctly() {
+// 	let mut node = get_node(SIMPLE_COMMAND_WITH_HEADERS.to_string());
+// 	node.resolve_predicate().unwrap();
+// 	assert_eq!(
+// 		"Bearer xxx-?|>^-",
+// 		node.headers
+// 			.clone()
+// 			.unwrap()
+// 			.get(&"Authorization".to_string())
+// 			.unwrap()
+// 	);
+// }

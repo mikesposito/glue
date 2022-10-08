@@ -40,6 +40,8 @@ async fn main() {
 	// Execute command and print result. Panic on error.
 	match glue_runner.execute().await {
 		Err(x) => panic!("Error encountered while executing requests: {}", x),
-		Ok(_) => println!("{}", glue_runner.result.unwrap()),
+		Ok(_) => println!("{}", glue_runner.result.clone().unwrap()),
 	};
+
+	println!("{:#?}", glue_runner);
 }

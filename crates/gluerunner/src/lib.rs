@@ -21,7 +21,6 @@ use std::{
 
 type MuxNode = Arc<Mutex<GlueNode>>;
 type HeapMap = LockedMap<String, String>;
-type DepMap = LockedMap<u32, String>;
 type LockedMap<K, V> = Arc<Mutex<HashMap<K, V>>>;
 type ParallelExecutionLayer = Vec<MuxNode>;
 type ExecutionStack = Vec<ParallelExecutionLayer>;

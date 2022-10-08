@@ -97,13 +97,16 @@ The main gluescipt request syntax is the following:
 
 Operators allow to execute operations on requests (body, headers params, nesting), on responses (selectors, variables)
 
-| Glue Syntax | Example | Description |
+| Operation | Syntax | Example |
 |---|---|---|
-| `^[selector]` | `^$.message` | [JSON Result Selector](#json-result-selector) |
-| `~[key]=[value]` | `~username=admin` | [Body attribute](#body-attributes) |
-| `*[key]=[value]` | `*authorization=xxx` | [Header attribute](#headers) |
-| `{[nested_request]}` | `get api.com/users/{get api.com/me}` | [Nested request](#nested-requests) |
-| `>[var]` | `>login_request` | [Save response in var](#save-response-in-variable) |
+| [JSON Result Selector](#json-result-selector) | **^**`selector` | `^$.message` |
+| [Body attribute](#body-attributes) | **~**`key`**=**`value` | `~username=admin` |
+| [Body attribute quoted](#body-attributes) | **~**`key`**="**`value`**"** | `~fullname="John Doe"` |
+| [Raw JSON body](#raw-json-body) | **~#-**`json`**-#** | `~#-{"username": "admin"}-#` |
+| [Header attribute](#headers) | **\***`key`**=**`value` | `*authorization=xxx` |
+| [Header attribute quoted](#headers) | **\***`key`**="**`value`**"** | `*authorization="Bearer xxx"` |
+| [Nested request](#nested-requests) | **{** `nested_request` **}** | `get api.com/users/{get api.com/me}` |
+| [Save response in var](#save-response-in-variable) | **>**`var` | `>login_request` |
 
 ### JSON result selector
 
@@ -150,12 +153,22 @@ get https://dog.ceo/api/breeds/list/all^$.message.terrier
 You can use the char `~` to add body attributes to the request:
 
 ```bash
-post https://example.com/user/add~username=admin
-# or
 post https://example.com/user/add ~username=admin
+# or
+post https://example.com/user/add~username=admin
 
 # glue will send a body of type JSON 
 # with a key "username" with value "admin"
+```
+
+#### **Raw JSON Body**
+
+Raw JSON values can also be used between `~#-JSON-` instead of single attributes:
+
+```bash
+post https://example.com/users ~#-{ "name": "John" }-#
+# or 
+post https://example.com/users~#-{ "name": "John" }-#
 ```
 
 #### **Note**

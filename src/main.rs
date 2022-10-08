@@ -42,6 +42,4 @@ async fn main() {
 		Err(x) => panic!("Error encountered while executing requests: {}", x),
 		Ok(_) => println!("{}", glue_runner.result.clone().unwrap()),
 	};
-
-	println!("{:#?}", glue_runner);
 }

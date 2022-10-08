@@ -2,6 +2,7 @@ use crate::{HeapMap, MuxNode, RequestError};
 use gluescript::{constants, RequestBodyType};
 use jsonpath_rust::JsonPathFinder;
 use reqwest::Client;
+use serde_json::Value;
 use std::{error::Error, sync::Arc};
 
 /// Executes http call for a specific `GlueNode` behind an `Arc<Mutex<T>>` using
@@ -112,6 +113,7 @@ pub async fn send_http_request(node: MuxNode) -> Result<String, Box<dyn Error>> 
 		Some(body_map) => match body_map.body_type {
 			RequestBodyType::JSON => client.json(&body_map.value),
 			RequestBodyType::FORM => client.form(&body_map.value),
+			_ => client.json::<Value>(&serde_json::from_str(&body_map.raw)?),
 		},
 	};
 

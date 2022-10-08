@@ -107,6 +107,7 @@ Operators allow to execute operations on requests (body, headers params, nesting
 | [Header attribute quoted](#headers) | **\***`key`**="**`value`**"** | `*authorization="Bearer xxx"` |
 | [Nested request](#nested-requests) | **{** `nested_request` **}** | `get api.com/users/{get api.com/me}` |
 | [Save response in var](#save-response-in-variable) | **>**`var` | `>login_request` |
+| [Sequential request separator](#multiple-requests) | `request`**;** `other_request` | `req test1; req test2` |
 
 ### JSON result selector
 
@@ -229,6 +230,11 @@ You can also create a file with request to run, and pass the file path to glue w
 ```bash
 glue -f examples/sample-request.glue
 ```
+
+#### Multiple requests
+
+Files can also contain multiple sequential requests separated by `;`.
+Take a look at [`./examples/sequential-requests.glue`](./examples/sequential-requests.glue).
 
 ### Save response in variable
 

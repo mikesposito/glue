@@ -1,5 +1,5 @@
-use lazy_static::lazy_static;
 use crate::constants;
+use lazy_static::lazy_static;
 use regex::Regex;
 
 pub fn exclude_quoted_text(input: String) -> String {

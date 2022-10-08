@@ -2,7 +2,17 @@
 name = "glueshell"
 version = "0.1.0-beta"
 edition = "2021"
+description = "A blazingly fast HTTP client with a magnificent request building syntax, made for humans."
 authors = ["Michele Esposito<michele@esposito.codes>"]
+license-file = "LICENSE"
+repository = "https://github.com/mikesposito/glue/"
+keywords = [
+	"language",
+	"cli",
+	"http-client",
+	"api-client",
+	"json-selector",
+]
 
 [dependencies]
 colored = "2.0.0"

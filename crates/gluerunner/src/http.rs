@@ -6,11 +6,7 @@ use std::{error::Error, sync::Arc};
 
 /// Executes http call for a specific `GlueNode` behind an `Arc<Mutex<T>>` using
 /// provided dependencies and heap `HashMap`.
-pub async fn execute_node(
-	node: MuxNode,
-	heap: HeapMap,
-	log_info: bool,
-) -> Result<(), String> {
+pub async fn execute_node(node: MuxNode, heap: HeapMap, log_info: bool) -> Result<(), String> {
 	// Acquire write lock on `GlueNode` mutex.
 	let mut w_node = node.lock().unwrap();
 

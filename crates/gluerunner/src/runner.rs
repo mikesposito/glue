@@ -150,7 +150,7 @@ impl Runner {
 				task.await?;
 			}
 		}
-		
+
 		// Assign root node result to `Runner` result.
 		self.result = Some(String::from(&self.root.lock().unwrap().result));
 

@@ -1,6 +1,6 @@
 [package]
 name = "gluerunner"
-version = "0.1.0-beta"
+version = "0.1.0"
 edition = "2021"
 description = "A blazingly fast HTTP client with a magnificent request building syntax, made for humans."
 authors = ["mikesposito"]
@@ -16,7 +16,7 @@ keywords = [
 
 [dependencies]
 colored = "2.0.0"
-gluescript = { path = "../gluescript", version = "0.1.0-beta" }
+gluescript = { path = "../gluescript" }
 reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
 jsonpath-rust = "0.1.6"

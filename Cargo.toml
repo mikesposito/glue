@@ -1,6 +1,6 @@
 [package]
 name = "glue-cli"
-version = "0.1.0-beta"
+version = "0.1.0"
 edition = "2021"
 description = "A blazingly fast HTTP client with a magnificent request building syntax, made for humans."
 authors = ["mikesposito"]
@@ -21,9 +21,9 @@ members = ["crates/gluescript", "crates/gluerunner", "crates/glueshell"]
 [dependencies]
 clap = { version = "3.2.17", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
-gluerunner = { path = "./crates/gluerunner", version = "0.1.0-beta" }
-gluescript = { path = "./crates/gluescript", version = "0.1.0-beta" }
-glueshell = { path = "./crates/glueshell", version = "0.1.0-beta" }
+gluerunner = { path = "./crates/gluerunner" }
+gluescript = { path = "./crates/gluescript" }
+glueshell = { path = "./crates/glueshell" }
 
 [[bin]]
 name = "glue"

@@ -1,6 +1,6 @@
 [package]
 name = "gluescript"
-version = "0.1.0-beta"
+version = "0.1.0"
 edition = "2021"
 description = "A blazingly fast HTTP client with a magnificent request building syntax, made for humans."
 authors = ["mikesposito"]

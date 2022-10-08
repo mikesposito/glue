@@ -6,6 +6,9 @@ use std::{
 use gluescript::node::GlueNode;
 
 const SIMPLE_COMMAND: &str = "get http://example.com";
+const SIMPLE_COMMAND_WITH_BODY: &str = "get http://example.com~username=admin~password=test";
+const SIMPLE_COMMAND_WITH_HEADERS: &str =
+	r#"get http://example.com*Authorization="Bearer xxx-?|>^-~*x""#;
 const WITH_SELECTOR_NESTED_COMMAND: &str = "get http://example.com/{post http://test.com^$.id}/";
 
 fn get_node(command: String) -> GlueNode {
@@ -56,4 +59,52 @@ fn it_resolves_dependency_correctly() {
 	node.resolve_predicate().unwrap();
 
 	assert_eq!(node.url, "http://example.com/test/".to_string());
+}
+
+#[test]
+fn it_resolves_body_correctly() {
+	let mut node = get_node(SIMPLE_COMMAND_WITH_BODY.to_string());
+	node.resolve_predicate().unwrap();
+	assert_eq!(
+		"admin",
+		node.body
+			.clone()
+			.unwrap()
+			.value
+			.get(&"username".to_string())
+			.unwrap()
+	);
+	assert_eq!(
+		"test",
+		node.body
+			.clone()
+			.unwrap()
+			.value
+			.get(&"password".to_string())
+			.unwrap()
+	);
+}
+
+#[test]
+fn it_resolves_headers_correctly() {
+	let mut node = get_node(SIMPLE_COMMAND_WITH_HEADERS.to_string());
+	node.resolve_predicate().unwrap();
+	assert_eq!(
+		"Authorization",
+		node.body
+			.clone()
+			.unwrap()
+			.value
+			.get(&"username".to_string())
+			.unwrap()
+	);
+	assert_eq!(
+		"Bearer xxx-?|>^-~*x",
+		node.body
+			.clone()
+			.unwrap()
+			.value
+			.get(&"password".to_string())
+			.unwrap()
+	);
 }

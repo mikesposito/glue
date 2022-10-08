@@ -3,13 +3,19 @@ name = "glue"
 version = "0.1.0-beta"
 edition = "2021"
 authors = ["Michele Esposito<michele@esposito.codes>"]
+license-file = "LICENSE"
+repository = "https://github.com/mikesposito/glue/"
+keywords = [
+	"language",
+	"cli",
+	"http-client",
+	"api-client",
+	"blazingly-fast",
+	"json-selector",
+]
 
 [workspace]
-members = [
-	"crates/gluescript",
-	"crates/gluerunner",
-	"crates/glueshell",
-]
+members = ["crates/gluescript", "crates/gluerunner", "crates/glueshell"]
 
 [dependencies]
 clap = { version = "3.2.17", features = ["derive"] }

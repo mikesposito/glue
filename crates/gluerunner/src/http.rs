@@ -1,4 +1,4 @@
-use crate::{DepMap, HeapMap, MuxNode, RequestError};
+use crate::{HeapMap, MuxNode, RequestError};
 use gluescript::{constants, RequestBodyType};
 use jsonpath_rust::JsonPathFinder;
 use reqwest::Client;
@@ -8,7 +8,6 @@ use std::{error::Error, sync::Arc};
 /// provided dependencies and heap `HashMap`.
 pub async fn execute_node(
 	node: MuxNode,
-	task_dependencies: DepMap,
 	heap: HeapMap,
 	log_info: bool,
 ) -> Result<(usize, String), String> {
@@ -67,18 +66,6 @@ pub async fn execute_node(
 		Err(x) => return Err(x),
 		Ok(x) => x,
 	};
-
-	// Acquire mutable lock on dependencies map to get exclusive access to it
-	// (other tasks could be access this concurrently).
-	let mut task_dependencies = task_dependencies.lock().unwrap();
-
-	// Save current `GlueNode` result into locked dep map to allow subsequent
-	// dependent requests to read the result from it.
-	task_dependencies.insert(w_node.id, String::from(&w_node.result));
-
-	// Drop the lock immediately after so other tasks waiting for it can
-	// resume execution asap.
-	drop(task_dependencies);
 
 	// If `save_as` has a value, then `result` value is saved into heap with
 	// `save_as` as key and `result` as value.

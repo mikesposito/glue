@@ -52,7 +52,7 @@ pub struct GlueNode {
 
 	/// Collection of child `GlueNode` needed as dependencies
 	/// for the request to be resolved.
-	pub dependencies: Vec<GlueNode>,
+	pub dependencies: Vec<Arc<Mutex<GlueNode>>>,
 
 	/// Depth of the `GlueNode` in the dep tree:
 	/// 0 if root node, 1 if first dependency in the graph,
@@ -138,7 +138,7 @@ impl GlueNode {
 					skip_till = dependency.build_tree_recursive()? + i;
 
 					// Dependency is pushed into the `dependencies` collection.
-					self.dependencies.push(dependency);
+					self.dependencies.push(Arc::new(Mutex::new(dependency)));
 
 					// A `{}` is added to `self.predicate` so it will be possible
 					// to replace it afterwards with the actual dependency
@@ -337,28 +337,18 @@ impl GlueNode {
 
 	/// Replace all `{}` placeholders from predicate with dependencies
 	/// results taken from a shared memory.
-	pub fn resolve_dependencies(
-		self: &mut Self,
-		task_dependencies: Arc<Mutex<HashMap<u32, String>>>,
-	) -> Result<(), String> {
-		// Acquire read lock on shared map.
-		let task_dependencies = task_dependencies.lock().unwrap();
-
+	pub fn resolve_dependencies(self: &mut Self) -> () {
 		if self.dependencies.len() > 0 {
-			// Save each dependency id in a handy vector so we can iterate over
-			// them without borrowing `w_node` in read and write mode combined.
-			let dep_ids: Vec<u32> = self.dependencies.iter().map(|dep| dep.id).collect();
+			// Dependencies are always in the same order of `{}` placeholders
+			for dependency in &self.dependencies {
+				// Acquire read lock on the dependency mutex
+				let dependency = dependency.lock().unwrap();
 
-			for id in dep_ids.into_iter() {
 				// Replace the next placeholder `{}` in the predicate with the actual
 				// dependency value.
-				self.predicate =
-					self.predicate
-						.replacen("{}", task_dependencies.get(&id).unwrap(), 1);
+				self.predicate = self.predicate.replacen("{}", &dependency.result, 1);
 			}
 		}
-
-		Ok(())
 	}
 
 	/// Print colored `GlueNode` info

@@ -43,7 +43,7 @@ impl Stack {
 
 	/// Create a new `Stack` instance starting from a `GlueNode`.
 	/// The created `GlueNode` will receive the `Arc` heap map from the fresh `Stack`.
-	pub fn from_root_node(root: &GlueNode, log_info: bool) -> Self {
+	pub fn from_root_node(root: GlueNode, log_info: bool) -> Self {
 		let mut stack = Stack::new();
 
 		// The same Arc is cloned in every `Runner` of the stack, so all every

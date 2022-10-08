@@ -1,4 +1,11 @@
-use crate::{constants, exclude_quoted_text, trim_and_remove_quotes, RequestBody, RequestBodyType};
+use crate::{
+	constants, exclude_quoted_text,
+	utils::{
+		extract_and_mask_quoted_text, is_value_a_quoted_reference, quoted_reference_to_value,
+		resolve_key_and_value,
+	},
+	RequestBody, RequestBodyType,
+};
 use colored::*;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use std::{
@@ -222,9 +229,13 @@ impl GlueNode {
 	fn resolve_headers(self: &mut Self) -> Result<(), String> {
 		let mut request_headers = HeaderMap::new();
 
+		// Get a sanitized string that excludes text between quotes.
+		// Also save the extracted text in a vector to later reuse it.
+		let (sanitized, quoted_text) = extract_and_mask_quoted_text(self.predicate.clone());
+
 		// Divide the headers in parts, as each header is always
 		// preceded by `*`.
-		let mut headers_parts = self.predicate.split('*');
+		let mut headers_parts = sanitized.split('*');
 
 		// The first is always the url and selector
 		headers_parts.next();
@@ -233,20 +244,12 @@ impl GlueNode {
 			// Sanitize the attribute removing any other operator from it
 			let sanitized = attribute.split(['\n', '\t', '^', '~']).nth(0).unwrap();
 
-			// Split key and value as they are divided by `=`
-			let mut key_value_array = sanitized.trim().split('=');
+			// Extract key and value from attribute
+			let (key, mut value) = resolve_key_and_value(sanitized.to_string())?;
 
-			// Fail if key is none
-			let key = match key_value_array.next() {
-				None => return Err(String::from(constants::ERR_UNRESOLVED_ATTR_KEY)),
-				Some(x) => x.trim().to_string(),
-			};
-
-			// Fail if value is none
-			let value = match key_value_array.next() {
-				None => return Err(String::from(constants::ERR_UNRESOLVED_ATTR_VAL)),
-				Some(x) => x.trim().to_string(),
-			};
+			if is_value_a_quoted_reference(value.clone()) {
+				value = quoted_reference_to_value(value, &quoted_text)?;
+			}
 
 			// Create header name from lowercase of `key`
 			let header_name = match HeaderName::from_lowercase(key.to_lowercase().as_bytes()) {
@@ -256,7 +259,7 @@ impl GlueNode {
 
 			// Create header name from lowercase of `value`, removing opening
 			// and closing quotes if present
-			let header_value = match HeaderValue::from_str(&trim_and_remove_quotes(value)[..]) {
+			let header_value = match HeaderValue::from_str(&value[..]) {
 				Err(x) => return Err(x.to_string()),
 				Ok(x) => x,
 			};
@@ -279,9 +282,13 @@ impl GlueNode {
 	fn resolve_body(self: &mut Self) -> Result<(), String> {
 		let mut request_body: HashMap<String, String> = HashMap::new();
 
+		// Get a sanitized string that excludes text between quotes.
+		// Also save the extracted text in a vector to later reuse it.
+		let (sanitized, quoted_text) = extract_and_mask_quoted_text(self.predicate.clone());
+
 		// Divide the body attributes in parts, as each header is always
 		// preceded by `~`.
-		let mut body_parts = self.predicate.split('~');
+		let mut body_parts = sanitized.split('~');
 
 		// The first is always the url and selector
 		body_parts.next();
@@ -290,20 +297,12 @@ impl GlueNode {
 			// Sanitize the attribute removing any other operator from it
 			let sanitized = attribute.split(['\n', '\t', '^', '~']).nth(0).unwrap();
 
-			// Split key and value as they are divided by `=`
-			let mut key_value_array = sanitized.trim().split('=');
+			// Extract key and value from attribute
+			let (key, mut value) = resolve_key_and_value(sanitized.to_string())?;
 
-			// Fail if key is none
-			let key = match key_value_array.next() {
-				None => return Err(String::from(constants::ERR_UNRESOLVED_ATTR_KEY)),
-				Some(x) => x.trim().to_string(),
-			};
-
-			// Fail if value is none, removing opening closing quotes if present
-			let value = match key_value_array.next() {
-				None => return Err(String::from(constants::ERR_UNRESOLVED_ATTR_VAL)),
-				Some(x) => trim_and_remove_quotes(x.to_string()),
-			};
+			if is_value_a_quoted_reference(value.clone()) {
+				value = quoted_reference_to_value(value, &quoted_text)?;
+			}
 
 			// Add key-value pair to body map
 			request_body.insert(key, value);

@@ -1,8 +1,9 @@
 use gluescript::node::GlueNode;
 
 const SIMPLE_COMMAND: &str = "get http://example.com";
-const SIMPLE_COMMAND_WITH_BODY: &str = "get http://example.com~username=admin~password=test";
-// const SIMPLE_COMMAND_WITH_HEADERS: &str = r#"get http://example.com*Authorization="Bearer xxx-?|>^-""#;
+const SIMPLE_COMMAND_WITH_BODY: &str = r#"get http://example.com~username=admin~password="xxx-?|>^-*~xx""#;
+const SIMPLE_COMMAND_WITH_HEADERS: &str =
+	r#"get http://example.com*Authorization="Bearer xxx-?|>^-*~xx""#;
 const WITH_SELECTOR_NESTED_COMMAND: &str = "get http://example.com/{post http://test.com^$.id}/";
 
 fn get_node(command: String) -> GlueNode {
@@ -63,7 +64,7 @@ fn it_resolves_body_correctly() {
 			.unwrap()
 	);
 	assert_eq!(
-		"test",
+		"xxx-?|>^-*~xx",
 		node.body
 			.clone()
 			.unwrap()
@@ -73,16 +74,16 @@ fn it_resolves_body_correctly() {
 	);
 }
 
-// #[test]
-// fn it_resolves_headers_correctly() {
-// 	let mut node = get_node(SIMPLE_COMMAND_WITH_HEADERS.to_string());
-// 	node.resolve_predicate().unwrap();
-// 	assert_eq!(
-// 		"Bearer xxx-?|>^-",
-// 		node.headers
-// 			.clone()
-// 			.unwrap()
-// 			.get(&"Authorization".to_string())
-// 			.unwrap()
-// 	);
-// }
+#[test]
+fn it_resolves_headers_correctly() {
+	let mut node = get_node(SIMPLE_COMMAND_WITH_HEADERS.to_string());
+	node.resolve_predicate().unwrap();
+	assert_eq!(
+		"Bearer xxx-?|>^-*~xx",
+		node.headers
+			.clone()
+			.unwrap()
+			.get(&"Authorization".to_string())
+			.unwrap()
+	);
+}

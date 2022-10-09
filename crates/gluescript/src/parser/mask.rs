@@ -44,7 +44,7 @@ impl Mask {
 
 	pub fn assign(self: &mut Self, value: String) -> () {
 		self.raw = value;
-    self.refresh_mask();
+		self.refresh_mask();
 	}
 
 	pub fn push(self: &mut Self, char: char) {

@@ -67,9 +67,12 @@ impl Stack {
 		match Parser::parse(content) {
 			Ok(parser) => match parser.to_nodes() {
 				Err(x) => Err(x.to_string()),
-				Ok(nodes) => Ok(nodes.iter().map(|node| self.push_runner_from_root_node(node.clone(), log_info)).collect::<()>())
+				Ok(nodes) => Ok(nodes
+					.iter()
+					.map(|node| self.push_runner_from_root_node(node.clone(), log_info))
+					.collect::<()>()),
 			},
-			Err(err) => Err(err.to_string())
+			Err(err) => Err(err.to_string()),
 		}
 	}
 
@@ -96,11 +99,7 @@ impl Stack {
 	///
 	/// If the `Runner` creation fails for some reason, an `Err` is returned.
 	/// The created `Runner` will receive the `Arc` heap map from the fresh `Stack`.
-	pub fn push_runner_from_root_node(
-		self: &mut Self,
-		node: GlueNode,
-		log_info: bool,
-	) -> () {
+	pub fn push_runner_from_root_node(self: &mut Self, node: GlueNode, log_info: bool) -> () {
 		// The `Stack` Arc heap is cloned in the `Runner`, so every `GlueNode`
 		// contained in it will concurrently access to the same memory.
 		let runner = Runner::from_root_node(node, Arc::clone(&self.heap), log_info);

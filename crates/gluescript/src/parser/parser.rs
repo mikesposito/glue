@@ -13,7 +13,7 @@ impl Parser {
 		let expressions = value
 			.masked()
 			.split(';')
-      .filter(|unmasked| unmasked.trim() != "")
+			.filter(|unmasked| unmasked.trim() != "")
 			.map(|unmasked| Mask::derive(unmasked.trim().to_string(), &value))
 			.map(|command_mask| Ok(Expression::from_mask(command_mask)?))
 			.collect::<Result<Vec<Expression>, _>>()?;

@@ -134,12 +134,12 @@ impl Expression {
 	}
 
 	fn parse_raw_recursive(self: &mut Self) -> Result<(), ParserError> {
-    println!("'{}'", self.raw.masked());
+		println!("'{}'", self.raw.masked());
 		self.tokens = self
 			.raw
 			.masked()
 			.split([' ', '\n', '\t'])
-      .filter(|part| part.trim() != "")
+			.filter(|part| part.trim() != "")
 			.map(|part| Mask::derive(part.trim().to_string(), &self.raw))
 			.enumerate()
 			.map(|(position, mask)| Ok(Token::new(mask, position)?))

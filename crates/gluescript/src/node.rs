@@ -4,7 +4,7 @@ use crate::{
 		extract_and_mask_quoted_text, get_raw_json_body, is_value_a_quoted_reference,
 		quoted_reference_to_value, remove_serialization_placeholders, resolve_key_and_value,
 	},
-	RequestBody, RequestBodyType, Serialized,
+	ParserError, ParserErrorType, RequestBody, RequestBodyType, Serialized,
 };
 use colored::*;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
@@ -225,6 +225,85 @@ impl GlueNode {
 			None => "".to_string(),
 			Some(x) => x.to_string(),
 		};
+	}
+
+	/// Set header attribute to `GlueNode`.
+	/// Propagate `ParserError` on invalid header.
+	pub fn set_header(self: &mut Self, header: (String, String)) -> Result<(), ParserError> {
+		let (key, val) = header;
+
+		// Create header name from lowercase of `key`
+		let header_name = match HeaderName::from_lowercase(key.to_lowercase().as_bytes()) {
+			Err(x) => {
+				return Err(ParserError::new(
+					ParserErrorType::MalformedAttribute,
+					x.to_string(),
+				))
+			}
+			Ok(x) => x,
+		};
+
+		// Create header name from lowercase of `value`, removing opening
+		// and closing quotes if present
+		let header_value = match HeaderValue::from_str(&val[..]) {
+			Err(x) => {
+				return Err(ParserError::new(
+					ParserErrorType::MalformedAttribute,
+					x.to_string(),
+				))
+			}
+			Ok(x) => x,
+		};
+
+		if let Some(map) = &mut self.headers {
+			// Insert header in existing header map
+			map.insert(header_name, header_value);
+		} else {
+			// Create fresh map.
+			let mut map = HeaderMap::new();
+
+			// Insert header in new map.
+			map.insert(header_name, header_value);
+
+			// Update node headers.
+			self.headers = Some(map);
+		}
+
+		Ok(())
+	}
+
+	/// Set body attribute to `GlueNode`.
+	/// Reset raw body if any.
+	pub fn set_body_attribute(self: &mut Self, attribute: (String, String)) -> () {
+		let (key, val) = attribute;
+
+		if let Some(body) = &mut self.body {
+			// Add key-value pair to body map
+			body.value.insert(key, val);
+
+			// Set body type to JSON
+			body.body_type = RequestBodyType::JSON;
+		} else {
+			// Create new map with attribute.
+			let mut map = HashMap::new();
+			map.insert(key, val);
+
+			// Build request body
+			let body = Some(RequestBody::new(RequestBodyType::JSON, Some(map), None));
+
+			// Update node body.
+			self.body = body;
+		}
+	}
+
+	/// Set raw value to body.
+	/// Reset attributes if any.
+	pub fn set_body_raw(self: &mut Self, raw_body: String) -> () {
+		self.body = Some(RequestBody::new(
+			RequestBodyType::ARBITRARY,
+			None,
+			Some(raw_body),
+		));
 	}
 
 	/// Resolve http request headers `self.predicate`.

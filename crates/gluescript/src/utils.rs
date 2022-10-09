@@ -4,7 +4,9 @@ use regex::Regex;
 
 lazy_static! {
 	static ref JSON_STRING_RE: Regex = Regex::new(r#"~#-(.*?)-#"#).unwrap();
+	static ref QUOTED_STRING_RE: Regex = Regex::new(r#""([^"\\]|\\.|\\\n)*""#).unwrap();
 	static ref SERIALIZATION_PLACEHOLDER_RE: Regex = Regex::new(r#"\|#(\d+)\|"#).unwrap();
+	static ref SERIALIZATION_QUOTE_PLACEHOLDER_RE: Regex = Regex::new(r#""(\d+)""#).unwrap();
 }
 
 pub fn exclude_quoted_text(input: String) -> String {

@@ -11,3 +11,11 @@ pub use utils::{exclude_quoted_text, trim_and_remove_quotes};
 
 pub mod serialized;
 pub use serialized::Serialized;
+
+pub mod parser;
+pub use parser::{
+	errors::{ParserError, ParserErrorType},
+	expression::Expression,
+	parser::Parser,
+	token::Token,
+};
